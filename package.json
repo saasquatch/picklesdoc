@@ -1,0 +1,38 @@
+{
+  "name": "@saasquatch/picklesdoc",
+  "version": "0.0.1",
+  "description": "Compile spec documents written in Gherkin language to XLSX or JSON",
+  "main": "dist/src/index.js",
+  "bin": {
+    "picklesdoc": "dist/src/index.js"
+  },
+  "files": [
+    "bin"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "example": "node dist/src/index.js xlsx --testers=2 test",
+    "tsc:version": "tsc --version",
+    "start": "node dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/saasquatch/picklesdoc"
+  },
+  "author": "Jayden Chan <jaydencn7@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/glob": "^7.1.1",
+    "@types/node": "^12.0.2",
+    "@types/yargs": "^13.0.0",
+    "typescript": "^3.4.5"
+  },
+  "dependencies": {
+    "gherkin": "^8.2.1",
+    "glob": "^7.1.4",
+    "moment": "^2.24.0",
+    "xlsx-populate": "^1.20.1",
+    "yargs": "^13.2.4"
+  }
+}
