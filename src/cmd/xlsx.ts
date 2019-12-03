@@ -334,7 +334,7 @@ function printBlock(
 
     if (step.docString) {
       printLongtext(sheet, step.docString, {
-        x: base.x + 1,
+        x: base.x + 2,
         y: currYIdx
       });
       currYIdx += 1;
