@@ -12,7 +12,7 @@ export const gherkins = (dir: string) => {
 };
 
 export const getOutputFileName = (input: string) => {
-  const defaultFileName = `gherkindoc--${moment().format(
+  const defaultFileName = `picklesdoc--${moment().format(
     "YYYY-MM-DD--HH-mm-ss"
   )}.xlsx`;
   if (!input) {

@@ -10,9 +10,26 @@ export enum ElementType {
   SCENARIO_OUTLINE
 }
 
-type FeatureElement = {
-  steps: any[];
-  examples: any[];
+export type Example = {
+  header: any[];
+  data: any[][];
+  beforeComments: string[];
+  afterComments: string[];
+};
+
+type Step = {
+  keyword: string;
+  rawKeyword: string;
+  text: string;
+  beforeComments: string[];
+  afterComments: string[];
+  docString: string;
+  dataTable: string[][];
+};
+
+export type FeatureElement = {
+  steps: Step[];
+  examples: Example[];
   elementType: ElementType;
   name: string;
   description: string;
@@ -26,19 +43,11 @@ type FeatureElement = {
   afterComments: string[];
 };
 
-type Feature = {
-  relativeFolder: string;
-  feature: {
-    name: string;
-    description: string;
-    featureElements: FeatureElement[];
-    tags: string[];
-    result: {
-      wasExecuted: boolean;
-      wasSuccessful: boolean;
-      wasProvided: boolean;
-    };
-  };
+export type SubFeature = {
+  name: string;
+  description: string;
+  featureElements: FeatureElement[];
+  tags: string[];
   result: {
     wasExecuted: boolean;
     wasSuccessful: boolean;
@@ -46,7 +55,17 @@ type Feature = {
   };
 };
 
-type GherkinJSON = {
+export type Feature = {
+  relativeFolder: string;
+  feature: SubFeature;
+  result: {
+    wasExecuted: boolean;
+    wasSuccessful: boolean;
+    wasProvided: boolean;
+  };
+};
+
+export type GherkinJSON = {
   features: Feature[];
   summary: {
     tags: string[];
@@ -73,7 +92,7 @@ type GherkinJSON = {
   };
 };
 
-export async function generate(files: string[]): Promise<any> {
+export async function generate(files: string[]): Promise<GherkinJSON> {
   return new Promise<any>((resolve, reject) => {
     const stream = parse(files);
 
@@ -128,7 +147,6 @@ export async function generate(files: string[]): Promise<any> {
       };
 
       const comments = chunk.gherkinDocument.comments;
-      console.log(`COMMENTS: ${comments}`);
 
       feature.children.forEach((child: any) => {
         const element = child.rule
@@ -206,8 +224,8 @@ const commentCrawler = (comments: any, startingIndex: any) => {
   let currentIndex = startingIndex;
 
   const ret = {
-    before: [],
-    after: []
+    before: <string[]>[],
+    after: <string[]>[]
   };
 
   let element;
@@ -230,28 +248,24 @@ const commentCrawler = (comments: any, startingIndex: any) => {
   return ret;
 };
 
-function processStep(step: any, comments: any): any {
-  const stepObj = {
+function processStep(step: any, comments: any): Step {
+  return {
     keyword: step.keyword.trim(),
     rawKeyword: step.keyword,
     text: step.text,
     beforeComments: comments.before,
     afterComments: comments.after,
-    docString: step.docString,
-    dataTable: []
+    docString: step.docString ? step.docString.content : "",
+    dataTable: step.dataTable
+      ? step.dataTable.rows.map((row: any) => {
+          return row.cells.map((cell: any) => cell.value);
+        })
+      : []
   };
-
-  if (step.dataTable) {
-    stepObj.dataTable = step.dataTable.rows.map((row: any) => {
-      return row.cells.map((cell: any) => cell.value);
-    });
-  }
-
-  return stepObj;
 }
 
-function processExample(example: any, comments: any): any {
-  const exampleObj = {
+function processExample(example: any, comments: any): Example {
+  return {
     header: example.tableHeader.cells.map((cell: any) => cell.value),
     data: example.tableBody.map((e: any) =>
       e.cells.map((cell: any) => cell.value)
@@ -259,6 +273,4 @@ function processExample(example: any, comments: any): any {
     beforeComments: comments.before,
     afterComments: comments.after
   };
-
-  return exampleObj;
 }

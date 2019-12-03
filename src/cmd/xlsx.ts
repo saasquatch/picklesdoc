@@ -1,8 +1,16 @@
+// @ts-ignore - No typedefs for xlsx-populate
 import * as XlsxPopulate from "xlsx-populate";
+// @ts-ignore - No typedefs for xlsx-populate
 import { RichText } from "xlsx-populate";
 
 import { generate as generateJson } from "../util/json";
-import { ElementType } from "../util/json";
+import {
+  ElementType,
+  Example,
+  FeatureElement,
+  GherkinJSON,
+  SubFeature
+} from "../util/json";
 import { styles } from "../util/styles";
 import { isDir, gherkins, getOutputFileName, getAllPaths } from "../util/fio";
 import { Arguments } from "yargs";
@@ -48,7 +56,7 @@ export const handler = async (argv: Arguments) => {
 
   const outFile = getOutputFileName(argv.out as string);
   const files = isDir(args[0]) ? gherkins(args[0]) : [args[0]];
-  const json = await generateJson(files);
+  const json: GherkinJSON = await generateJson(files);
   const testers = (argv.testers as number) || 0;
 
   const wb = await XlsxPopulate.fromBlankAsync();
@@ -175,7 +183,11 @@ function printTOC(sheet: any, toc: TOCEntry, base: CoordinateBase): number {
  * @param {Object} feature The feature for the sheet
  * @param {Number} testers The number of tester columns
  */
-function printFeatureSheet(wb: any, feature: any, testers: number): void {
+function printFeatureSheet(
+  wb: any,
+  feature: SubFeature,
+  testers: number
+): void {
   const baseContentColumn = testers + 2;
   const sheet = wb.addSheet(getSheetName(feature.name));
   const maxWidths: MaxWidths = {};
@@ -243,7 +255,7 @@ function printFeatureSheet(wb: any, feature: any, testers: number): void {
  */
 function printBlock(
   sheet: any,
-  block: any,
+  block: FeatureElement,
   maxWidths: MaxWidths,
   base: CoordinateBase
 ): number {
@@ -313,7 +325,7 @@ function printBlock(
     }
 
     if (step.docString) {
-      printLongtext(sheet, step.docString.content, {
+      printLongtext(sheet, step.docString, {
         x: base.x + 1,
         y: currYIdx
       });
@@ -394,7 +406,13 @@ function printDataTable(
   maxWidths: MaxWidths,
   base: CoordinateBase
 ): number {
-  table.shift().forEach((col, idx) => {
+  const header = table.shift();
+
+  if (header === undefined) {
+    return 0;
+  }
+
+  header.forEach((col, idx) => {
     const x = base.x + idx;
     updateMaxWidths(sheet, maxWidths, x, col.length);
 
@@ -432,7 +450,7 @@ function printDataTable(
  */
 function printExampleTable(
   sheet: any,
-  table: any,
+  table: Example,
   maxWidths: MaxWidths,
   base: CoordinateBase
 ): number {
