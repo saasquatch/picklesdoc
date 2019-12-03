@@ -4,10 +4,10 @@ import { parse } from "./parser";
 import { version } from "../../package.json";
 
 export enum ElementType {
-  RULE,
-  BACKGROUND,
-  SCENARIO,
-  SCENARIO_OUTLINE
+  Rule = "Rule",
+  Background = "Background",
+  Scenario = "Scenario",
+  ScenarioOutline = "Scenario Outline"
 }
 
 export type Example = {
@@ -169,12 +169,12 @@ export async function generate(files: string[]): Promise<GherkinJSON> {
           : [];
 
         const elementType = child.rule
-          ? ElementType.RULE
+          ? ElementType.Rule
           : child.background
-          ? ElementType.BACKGROUND
+          ? ElementType.Background
           : examples.length > 0
-          ? ElementType.SCENARIO_OUTLINE
-          : ElementType.SCENARIO;
+          ? ElementType.ScenarioOutline
+          : ElementType.Scenario;
 
         const steps = element.steps
           ? element.steps.map((step: any) => {

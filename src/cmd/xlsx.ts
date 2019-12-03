@@ -15,8 +15,25 @@ import { styles } from "../util/styles";
 import { isDir, gherkins, getOutputFileName, getAllPaths } from "../util/fio";
 import { Arguments } from "yargs";
 
-export const command = "xlsx";
+export const command = "xlsx <input> [out]";
 export const desc = "Parse the provided file or directory into XLSX";
+
+export const builder = (yargs: any) => {
+  return yargs
+    .positional("input", {
+      describe: "Input feature file or directory",
+      type: "file"
+    })
+    .positional("out", {
+      describe: "Output file or directory",
+      type: "file"
+    })
+    .option("testers", {
+      describe: "Number of tester columns (for QA purposes)",
+      type: "number",
+      default: 0
+    });
+};
 
 const DESCRIPTION_HEIGHT_MULTIPLIER = 14;
 const DESCRIPTION_HEIGHT_OFFSET = 15;
@@ -42,20 +59,11 @@ type MaxWidths = {
 };
 
 export const handler = async (argv: Arguments) => {
-  argv._.shift();
-
-  const args = argv._;
-
-  if (args.length !== 1) {
-    console.log("Wrong number of arguments.");
-    console.log("Pass a .feature file or directory.");
-    return;
-  }
-
   console.log("Generating spreadsheet...");
 
   const outFile = getOutputFileName(argv.out as string);
-  const files = isDir(args[0]) ? gherkins(args[0]) : [args[0]];
+  const inFile = argv.input as string;
+  const files = isDir(inFile) ? gherkins(inFile) : [inFile];
   const json: GherkinJSON = await generateJson(files);
   const testers = (argv.testers as number) || 0;
 
@@ -224,8 +232,8 @@ function printFeatureSheet(
   feature.featureElements.forEach(element => {
     const eType = element.elementType;
     if (
-      (testers > 0 && eType === ElementType.SCENARIO) ||
-      eType === ElementType.SCENARIO_OUTLINE
+      (testers > 0 && eType === ElementType.Scenario) ||
+      eType === ElementType.ScenarioOutline
     ) {
       for (let i = 1; i <= testers; i++) {
         sheet
