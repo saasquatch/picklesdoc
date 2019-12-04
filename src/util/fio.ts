@@ -11,10 +11,11 @@ export const gherkins = (dir: string) => {
   return glob.sync(`${dir}/**/*.feature`);
 };
 
-export const getOutputFileName = (input: string) => {
+export const getOutputFileName = (input: string, ext: string) => {
   const defaultFileName = `picklesdoc--${moment().format(
     "YYYY-MM-DD--HH-mm-ss"
-  )}`;
+  )}${ext}`;
+
   if (!input) {
     return defaultFileName;
   }

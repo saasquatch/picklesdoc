@@ -21,13 +21,14 @@ export const builder = (yargs: any) => {
 
 export const handler = async (argv: Arguments) => {
   const inFile = argv.input as string;
-  const outFile = getOutputFileName(argv.out as string);
+  const outFile = getOutputFileName(argv.out as string, ".json");
   const files = isDir(inFile) ? gherkins(inFile) : [inFile];
 
   const json = await generateJson(files);
 
   if (outFile !== undefined) {
-    writeFileSync(`${outFile}.json`, JSON.stringify(json, undefined, 2));
+    writeFileSync(`${outFile}`, JSON.stringify(json, undefined, 2));
+    console.log(`JSON written to ${outFile}`);
   } else {
     console.log(JSON.stringify(json, undefined, 2));
   }

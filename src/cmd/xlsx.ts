@@ -61,7 +61,7 @@ type MaxWidths = {
 export const handler = async (argv: Arguments) => {
   console.log("Generating spreadsheet...");
 
-  const outFile = getOutputFileName(argv.out as string);
+  const outFile = getOutputFileName(argv.out as string, ".xlsx");
   const inFile = argv.input as string;
   const files = isDir(inFile) ? gherkins(inFile) : [inFile];
   const json: GherkinJSON = await generateJson(files);
@@ -113,9 +113,9 @@ export const handler = async (argv: Arguments) => {
     }
   }
 
-  wb.toFileAsync(`${outFile}.xlsx`);
+  wb.toFileAsync(`${outFile}`);
   console.log("Finished.");
-  console.log(`Workbook written to ${outFile}.xlsx`);
+  console.log(`Workbook written to ${outFile}`);
 };
 
 /**
