@@ -12,7 +12,13 @@ import {
   SubFeature
 } from "../util/json";
 import { styles } from "../util/styles";
-import { isDir, gherkins, getOutputFileName, getAllPaths } from "../util/fio";
+import {
+  FType,
+  pathInfo,
+  gherkins,
+  getOutputFileName,
+  getAllPaths
+} from "../util/fio";
 import { Arguments } from "yargs";
 
 export const command = "xlsx <input> [out]";
@@ -63,7 +69,8 @@ export const handler = async (argv: Arguments) => {
 
   const outFile = getOutputFileName(argv.out as string, ".xlsx");
   const inFile = argv.input as string;
-  const files = isDir(inFile) ? gherkins(inFile) : [inFile];
+  const files =
+    pathInfo(inFile) === FType.Directory ? gherkins(inFile) : [inFile];
   const json: GherkinJSON = await generateJson(files);
   const testers = (argv.testers as number) || 0;
 
