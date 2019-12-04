@@ -14,7 +14,7 @@ export const gherkins = (dir: string) => {
 export const getOutputFileName = (input: string) => {
   const defaultFileName = `picklesdoc--${moment().format(
     "YYYY-MM-DD--HH-mm-ss"
-  )}.xlsx`;
+  )}`;
   if (!input) {
     return defaultFileName;
   }

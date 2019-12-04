@@ -1,5 +1,5 @@
 import { generate as generateJson } from "../util/json";
-import { isDir, gherkins } from "../util/fio";
+import { isDir, gherkins, getOutputFileName } from "../util/fio";
 import { Arguments } from "yargs";
 import { writeFileSync } from "fs";
 
@@ -21,13 +21,13 @@ export const builder = (yargs: any) => {
 
 export const handler = async (argv: Arguments) => {
   const inFile = argv.input as string;
-  const outFile = argv.out as string;
+  const outFile = getOutputFileName(argv.out as string);
   const files = isDir(inFile) ? gherkins(inFile) : [inFile];
 
   const json = await generateJson(files);
 
   if (outFile !== undefined) {
-    writeFileSync(outFile, JSON.stringify(json, undefined, 2));
+    writeFileSync(`${outFile}.json`, JSON.stringify(json, undefined, 2));
   } else {
     console.log(JSON.stringify(json, undefined, 2));
   }

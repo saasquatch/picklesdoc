@@ -113,9 +113,9 @@ export const handler = async (argv: Arguments) => {
     }
   }
 
-  wb.toFileAsync(outFile);
+  wb.toFileAsync(`${outFile}.xlsx`);
   console.log("Finished.");
-  console.log(`Workbook written to ${outFile}`);
+  console.log(`Workbook written to ${outFile}.xlsx`);
 };
 
 /**

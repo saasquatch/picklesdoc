@@ -1,6 +1,6 @@
 {
   "name": "picklesdoc",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Compile spec documents written in Gherkin language to XLSX or JSON",
   "main": "dist/index.js",
   "bin": {
