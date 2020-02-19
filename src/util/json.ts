@@ -46,6 +46,10 @@ export type FeatureElement = {
 export type SubFeature = {
   name: string;
   description: string;
+  location: {
+    line: number;
+    column: number;
+  };
   featureElements: FeatureElement[];
   tags: string[];
   result: {
@@ -125,12 +129,14 @@ export async function generate(files: string[]): Promise<GherkinJSON> {
 
     stream.on("data", (chunk: any) => {
       const feature = chunk.gherkinDocument.feature;
+      console.log(feature.location);
 
       const tmp: Feature = {
         relativeFolder: chunk.gherkinDocument.uri,
         feature: {
           name: feature.name,
           description: feature.description,
+          location: feature.location,
           featureElements: [],
           tags: feature.tags.map((tag: any) => tag.name),
           result: {
@@ -231,7 +237,7 @@ const commentCrawler = (comments: any, startingIndex: any) => {
   let element;
   // prettier-ignore
   // eslint-disable-next-line no-cond-assign
-  while (element = comments.find((c: any)=> c.location.line === currentIndex - 1)) {
+  while (element = comments.find((c: any) => c.location.line === currentIndex - 1)) {
       ret.before.push(element.text.trim());
       currentIndex--;
     }
@@ -240,7 +246,7 @@ const commentCrawler = (comments: any, startingIndex: any) => {
 
   // prettier-ignore
   // eslint-disable-next-line no-cond-assign
-  while (element = comments.find((c: any)=> c.location.line === currentIndex + 1)) {
+  while (element = comments.find((c: any) => c.location.line === currentIndex + 1)) {
       ret.after.push(element.text.trim());
       currentIndex++;
     }
