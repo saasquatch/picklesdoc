@@ -10,6 +10,11 @@ export enum ElementType {
   ScenarioOutline = "Scenario Outline"
 }
 
+export type Location =  {
+  line: number;
+  column: number;
+};
+
 export type Example = {
   header: any[];
   data: any[][];
@@ -33,6 +38,7 @@ export type FeatureElement = {
   elementType: ElementType;
   name: string;
   description: string;
+  location: Location;
   tags: string[];
   result: {
     wasExecuted: boolean;
@@ -46,10 +52,7 @@ export type FeatureElement = {
 export type SubFeature = {
   name: string;
   description: string;
-  location: {
-    line: number;
-    column: number;
-  };
+  location: Location;
   featureElements: FeatureElement[];
   tags: string[];
   result: {
@@ -199,6 +202,7 @@ export async function generate(files: string[]): Promise<GherkinJSON> {
           elementType,
           name: element.name,
           description: element.description || "",
+          location: element.location,
           tags: element.tags ? element.tags.map((tag: any) => tag.name) : [],
           result: {
             wasExecuted: false,
