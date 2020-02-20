@@ -129,7 +129,6 @@ export async function generate(files: string[]): Promise<GherkinJSON> {
 
     stream.on("data", (chunk: any) => {
       const feature = chunk.gherkinDocument.feature;
-      console.log(feature.location);
 
       const tmp: Feature = {
         relativeFolder: chunk.gherkinDocument.uri,
