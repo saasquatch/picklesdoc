@@ -7,10 +7,10 @@ export enum ElementType {
   Rule = "Rule",
   Background = "Background",
   Scenario = "Scenario",
-  ScenarioOutline = "Scenario Outline"
+  ScenarioOutline = "Scenario Outline",
 }
 
-export type Location =  {
+export type Location = {
   line: number;
   column: number;
 };
@@ -113,21 +113,21 @@ export async function generate(files: string[]): Promise<GherkinJSON> {
           total: 0,
           passing: 0,
           failing: 0,
-          inconclusive: 0
+          inconclusive: 0,
         },
         features: {
           total: 0,
           passing: 0,
           failing: 0,
-          inconclusive: 0
-        }
+          inconclusive: 0,
+        },
       },
       configuration: {
         version,
         program: "picklesdoc",
         generatedOn: moment().format(),
-        generatedOnTimestamp: moment().valueOf()
-      }
+        generatedOnTimestamp: moment().valueOf(),
+      },
     };
 
     stream.on("data", (chunk: any) => {
@@ -144,14 +144,14 @@ export async function generate(files: string[]): Promise<GherkinJSON> {
           result: {
             wasExecuted: false,
             wasSuccessful: false,
-            wasProvided: false
-          }
+            wasProvided: false,
+          },
         },
         result: {
           wasExecuted: false,
           wasSuccessful: false,
-          wasProvided: false
-        }
+          wasProvided: false,
+        },
       };
 
       const comments = chunk.gherkinDocument.comments;
@@ -207,10 +207,10 @@ export async function generate(files: string[]): Promise<GherkinJSON> {
           result: {
             wasExecuted: false,
             wasSuccessful: false,
-            wasProvided: false
+            wasProvided: false,
           },
           beforeComments: commentsFound.before,
-          afterComments: commentsFound.after
+          afterComments: commentsFound.after,
         });
       });
 
@@ -234,7 +234,7 @@ const commentCrawler = (comments: any, startingIndex: any) => {
 
   const ret = {
     before: <string[]>[],
-    after: <string[]>[]
+    after: <string[]>[],
   };
 
   let element;
@@ -269,7 +269,7 @@ function processStep(step: any, comments: any): Step {
       ? step.dataTable.rows.map((row: any) => {
           return row.cells.map((cell: any) => cell.value);
         })
-      : []
+      : [],
   };
 }
 
@@ -280,6 +280,6 @@ function processExample(example: any, comments: any): Example {
       e.cells.map((cell: any) => cell.value)
     ),
     beforeComments: comments.before,
-    afterComments: comments.after
+    afterComments: comments.after,
   };
 }

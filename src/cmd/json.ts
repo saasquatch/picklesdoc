@@ -10,12 +10,12 @@ export const builder = (yargs: any) => {
   return yargs
     .positional("input", {
       describe: "Input feature file or directory",
-      type: "file"
+      type: "file",
     })
     .positional("out", {
       describe:
         "Output file or directory. Will print to STDOUT if not specified",
-      type: "file"
+      type: "file",
     });
 };
 
@@ -26,7 +26,7 @@ export const handler = async (argv: Arguments) => {
 
   const json = await generateJson(files);
 
-  if (outFile !== undefined) {
+  if (argv.out !== undefined) {
     writeFileSync(`${outFile}`, JSON.stringify(json, undefined, 2));
     console.log(`JSON written to ${outFile}`);
   } else {
