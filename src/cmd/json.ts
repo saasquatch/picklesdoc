@@ -26,7 +26,7 @@ export const handler = async (argv: Arguments) => {
 
   const json = await generateJson(files);
 
-  if (outFile !== undefined) {
+  if (argv.out !== undefined) {
     writeFileSync(`${outFile}`, JSON.stringify(json, undefined, 2));
     console.log(`JSON written to ${outFile}`);
   } else {

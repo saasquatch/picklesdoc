@@ -25,6 +25,12 @@ Parse the provided file or directory into XLSX
 ##### Options
 * `-h` `--help` Show help [boolean]
 * `--testers` Number of tester columns to generate (for QA purposes) [number] [default: 0]
+##### Examples
+```
+picklesdoc xlsx ./features my-spreadsheet.xlsx --testers=2
+picklesdoc xlsx my-feature.feature my-spreadsheet.xlsx
+picklesdoc xlsx ./features ./out --testers=3
+```
 
 ### `picklesdoc json <input> [out]`
 Parse the provided file or directory into JSON
@@ -33,3 +39,9 @@ Parse the provided file or directory into JSON
 - `out` Output file or directory. Will print to `STDOUT` if not specified
 ##### Options
 * `-h` `--help` Show help [boolean]
+##### Examples
+```
+picklesdoc json ./features my-output-file.json
+picklesdoc json my-feature.feature > output.json
+picklesdoc json my-feature.feature | jq
+```
