@@ -500,14 +500,14 @@ function getSheetName(feature: Feature, sheetNameMap: SheetNameMap): string {
   let name = feature.feature.name
     .replace(/\s+/g, "")
     .replace(/[\\/*[\]:?]/g, "_")
-    .slice(0, 30)
+    .slice(0, 29)
     .toUpperCase();
 
   if (
     sheetNameMap[name] !== undefined &&
     sheetNameMap[name] !== feature.relativeFolder
   ) {
-    for (let i = 2; i <= 9; i++) {
+    for (let i = 2; i <= 99; i++) {
       const newName = `${name}${i}`;
       if (
         sheetNameMap[newName] === undefined ||
