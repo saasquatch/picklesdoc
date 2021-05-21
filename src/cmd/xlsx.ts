@@ -4,7 +4,7 @@ import * as XlsxPopulate from "xlsx-populate";
 import { RichText } from "xlsx-populate";
 
 import { generate as generateJson } from "../util/json";
-import { ElementType, Example, FeatureElement, SubFeature } from "../util/json";
+import { ElementType, Example, FeatureElement, Feature } from "../util/json";
 import { styles } from "../util/styles";
 import {
   FType,
@@ -49,12 +49,16 @@ type TableOfContents = {
 
 type TOCEntry = {
   title: string;
-  sheets: string[];
+  sheets: Feature[];
   subdirs: TableOfContents;
 };
 
 type MaxWidths = {
   [key: number]: number;
+};
+
+type SheetNameMap = {
+  [key: string]: string;
 };
 
 export const handler = async (argv: Arguments) => {
@@ -69,6 +73,7 @@ export const handler = async (argv: Arguments) => {
 
   const wb = await XlsxPopulate.fromBlankAsync();
   const toc: TableOfContents = {};
+  const sheetNameMap: SheetNameMap = {};
 
   wbInit(wb, testers);
   json.features.forEach((f) => {
@@ -88,32 +93,37 @@ export const handler = async (argv: Arguments) => {
       if (index < allRelativePaths.length - 1) {
         curr = curr[path].subdirs;
       } else {
-        curr[path].sheets.push(f.feature.name);
+        curr[path].sheets.push(f);
       }
     });
 
-    printFeatureSheet(wb, f.feature, testers);
+    printFeatureSheet(wb, f, testers, sheetNameMap);
   });
 
   let height = 2;
   const tocKeys = Object.keys(toc);
   if (tocKeys.length === 1 && toc[tocKeys[0]].sheets.length === 0) {
     for (const key in toc[tocKeys[0]].subdirs) {
-      height += printTOC(wb.sheet("TOC"), toc[tocKeys[0]].subdirs[key], {
-        x: testers + 2,
-        y: height,
-      });
+      height += printTOC(
+        wb.sheet("TOC"),
+        toc[tocKeys[0]].subdirs[key],
+        sheetNameMap,
+        {
+          x: testers + 2,
+          y: height,
+        }
+      );
     }
   } else {
     for (const key in toc) {
-      height += printTOC(wb.sheet("TOC"), toc[key], {
+      height += printTOC(wb.sheet("TOC"), toc[key], sheetNameMap, {
         x: testers + 2,
         y: height,
       });
     }
   }
 
-  wb.toFileAsync(`${outFile}`);
+  await wb.toFileAsync(`${outFile}`);
   console.log("Finished.");
   console.log(`Workbook written to ${outFile}`);
 };
@@ -145,26 +155,32 @@ function wbInit(wb: any, testers: number): void {
  *
  * @param {Object} sheet The sheet to print onto
  * @param {TableOfContents} toc The table of contents
+ * @param {SheetNameMap} sheetNameMap Map of sheet names
  * @param {CoordinateBase} base The base coordinates
  *
  * @return {Number} The number of lines printed
  */
-function printTOC(sheet: any, toc: TOCEntry, base: CoordinateBase): number {
+function printTOC(
+  sheet: any,
+  toc: TOCEntry,
+  sheetNameMap: SheetNameMap,
+  base: CoordinateBase
+): number {
   let height = 0;
   sheet.cell(base.y, base.x).value(toc.title).style(styles.bold);
 
   toc.sheets.forEach((s, idx) => {
     sheet
       .cell(base.y + idx + 1, base.x + 1)
-      .value(s)
+      .value(s.feature.name)
       .style(styles.hyperlink)
-      .hyperlink(`${getSheetName(s)}!A1`);
+      .hyperlink(`${getSheetName(s, sheetNameMap)}!A1`);
   });
 
   height += toc.sheets.length;
 
   for (const subkey in toc.subdirs) {
-    height += printTOC(sheet, toc.subdirs[subkey], {
+    height += printTOC(sheet, toc.subdirs[subkey], sheetNameMap, {
       x: base.x + 1,
       y: base.y + height + 1,
     });
@@ -187,11 +203,13 @@ function printTOC(sheet: any, toc: TOCEntry, base: CoordinateBase): number {
  */
 function printFeatureSheet(
   wb: any,
-  feature: SubFeature,
-  testers: number
+  fullFeature: Feature,
+  testers: number,
+  sheetNameMap: SheetNameMap
 ): void {
+  const { feature } = fullFeature;
   const baseContentColumn = testers + 2;
-  const sheet = wb.addSheet(getSheetName(feature.name));
+  const sheet = wb.addSheet(getSheetName(fullFeature, sheetNameMap));
   const maxWidths: MaxWidths = {};
 
   // Configure the title row
@@ -474,15 +492,40 @@ function printExampleTable(
  * sheet name
  *
  * @param {String} feature The name of the feature
+ * @param {SheetNameMap} sheetNameMap Map of sheet names
  *
  * @return {String} The transformed sheet name
  */
-function getSheetName(feature: string): string {
-  return feature
+function getSheetName(feature: Feature, sheetNameMap: SheetNameMap): string {
+  let name = feature.feature.name
     .replace(/\s+/g, "")
     .replace(/[\\/*[\]:?]/g, "_")
-    .slice(0, 31)
+    .slice(0, 30)
     .toUpperCase();
+
+  if (
+    sheetNameMap[name] !== undefined &&
+    sheetNameMap[name] !== feature.relativeFolder
+  ) {
+    for (let i = 2; i <= 9; i++) {
+      const newName = `${name}${i}`;
+      if (
+        sheetNameMap[newName] === undefined ||
+        sheetNameMap[newName] === feature.relativeFolder
+      ) {
+        name = newName;
+        sheetNameMap[name] = feature.relativeFolder;
+        return newName;
+      }
+    }
+
+    throw new Error(
+      `Failed to find suitable name for ${feature.feature.name} (too many sheets named ${name}!)`
+    );
+  }
+
+  sheetNameMap[name] = feature.relativeFolder;
+  return name;
 }
 
 /**
