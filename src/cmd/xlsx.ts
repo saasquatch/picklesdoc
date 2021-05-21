@@ -43,7 +43,6 @@ export const builder = (yargs: any) => {
 
 const DESCRIPTION_HEIGHT_MULTIPLIER = 14;
 const DESCRIPTION_HEIGHT_OFFSET = 15;
-const MAX_COL_WIDTH_PADDING = 1.6;
 
 type CoordinateBase = {
   x: number;

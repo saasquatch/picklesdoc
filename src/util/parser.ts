@@ -2,10 +2,10 @@ import * as gherkin from "gherkin";
 
 /**
  * Parses the feature file and returns the stream
- * @param {String} path The path to the feature file
+ * @param {String[]} paths The path to the feature file
  * @return {Stream} The stream of data from the Gherkin parser
  */
-export const parse = (paths: string[]) => {
+export function parse(paths: string[]) {
   const options = {
     includeSource: false,
     includeGherkinDocument: true,
@@ -13,4 +13,4 @@ export const parse = (paths: string[]) => {
   };
 
   return gherkin.fromPaths(paths, options);
-};
+}
