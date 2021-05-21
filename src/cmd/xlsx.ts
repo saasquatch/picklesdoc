@@ -4,13 +4,7 @@ import * as XlsxPopulate from "xlsx-populate";
 import { RichText } from "xlsx-populate";
 
 import { generate as generateJson } from "../util/json";
-import {
-  ElementType,
-  Example,
-  FeatureElement,
-  GherkinJSON,
-  SubFeature,
-} from "../util/json";
+import { ElementType, Example, FeatureElement, SubFeature } from "../util/json";
 import { styles } from "../util/styles";
 import {
   FType,
@@ -70,7 +64,7 @@ export const handler = async (argv: Arguments) => {
   const inFile = argv.input as string;
   const files =
     pathInfo(inFile) === FType.Directory ? gherkins(inFile) : [inFile];
-  const json: GherkinJSON = await generateJson(files);
+  const json = await generateJson(files);
   const testers = (argv.testers as number) || 0;
 
   const wb = await XlsxPopulate.fromBlankAsync();
