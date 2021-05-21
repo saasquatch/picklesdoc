@@ -9,7 +9,7 @@ import {
   Example,
   FeatureElement,
   GherkinJSON,
-  SubFeature
+  SubFeature,
 } from "../util/json";
 import { styles } from "../util/styles";
 import {
@@ -17,7 +17,7 @@ import {
   pathInfo,
   gherkins,
   getOutputFileName,
-  getAllPaths
+  getAllPaths,
 } from "../util/fio";
 import { Arguments } from "yargs";
 
@@ -28,16 +28,16 @@ export const builder = (yargs: any) => {
   return yargs
     .positional("input", {
       describe: "Input feature file or directory",
-      type: "file"
+      type: "file",
     })
     .positional("out", {
       describe: "Output file or directory",
-      type: "file"
+      type: "file",
     })
     .option("testers", {
       describe: "Number of tester columns (for QA purposes)",
       type: "number",
-      default: 0
+      default: 0,
     });
 };
 
@@ -78,7 +78,7 @@ export const handler = async (argv: Arguments) => {
   const toc: TableOfContents = {};
 
   wbInit(wb, testers);
-  json.features.forEach(f => {
+  json.features.forEach((f) => {
     const allRelativePaths = getAllPaths(f.relativeFolder);
     let curr = toc;
 
@@ -88,7 +88,7 @@ export const handler = async (argv: Arguments) => {
         curr[path] = {
           title: path,
           sheets: [],
-          subdirs: {}
+          subdirs: {},
         };
       }
 
@@ -108,14 +108,14 @@ export const handler = async (argv: Arguments) => {
     for (const key in toc[tocKeys[0]].subdirs) {
       height += printTOC(wb.sheet("TOC"), toc[tocKeys[0]].subdirs[key], {
         x: testers + 2,
-        y: height
+        y: height,
       });
     }
   } else {
     for (const key in toc) {
       height += printTOC(wb.sheet("TOC"), toc[key], {
         x: testers + 2,
-        y: height
+        y: height,
       });
     }
   }
@@ -134,10 +134,7 @@ export const handler = async (argv: Arguments) => {
  */
 function wbInit(wb: any, testers: number): void {
   const toc = wb.sheet(0);
-  toc
-    .name("TOC")
-    .cell("A1")
-    .value("New/TODO");
+  toc.name("TOC").cell("A1").value("New/TODO");
 
   toc.row(1).style(styles.bold);
 
@@ -161,10 +158,7 @@ function wbInit(wb: any, testers: number): void {
  */
 function printTOC(sheet: any, toc: TOCEntry, base: CoordinateBase): number {
   let height = 0;
-  sheet
-    .cell(base.y, base.x)
-    .value(toc.title)
-    .style(styles.bold);
+  sheet.cell(base.y, base.x).value(toc.title).style(styles.bold);
 
   toc.sheets.forEach((s, idx) => {
     sheet
@@ -179,7 +173,7 @@ function printTOC(sheet: any, toc: TOCEntry, base: CoordinateBase): number {
   for (const subkey in toc.subdirs) {
     height += printTOC(sheet, toc.subdirs[subkey], {
       x: base.x + 1,
-      y: base.y + height + 1
+      y: base.y + height + 1,
     });
   }
 
@@ -209,10 +203,7 @@ function printFeatureSheet(
 
   // Configure the title row
   sheet.freezePanes(0, 1);
-  sheet
-    .cell(1, baseContentColumn)
-    .value(feature.name)
-    .style(styles.bold);
+  sheet.cell(1, baseContentColumn).value(feature.name).style(styles.bold);
 
   let currYIdx = 2;
   if (feature.tags.length > 0) {
@@ -229,30 +220,27 @@ function printFeatureSheet(
     // Place the feature description in the box below the tags
     printLongtext(sheet, feature.description.replace(/\n +/g, "\n").trim(), {
       x: baseContentColumn + 1,
-      y: currYIdx
+      y: currYIdx,
     });
     currYIdx += 1;
   }
 
   currYIdx += 1;
 
-  feature.featureElements.forEach(element => {
+  feature.featureElements.forEach((element) => {
     const eType = element.elementType;
     if (
       (testers > 0 && eType === ElementType.Scenario) ||
       eType === ElementType.ScenarioOutline
     ) {
       for (let i = 1; i <= testers; i++) {
-        sheet
-          .cell(currYIdx, i)
-          .value("Pending")
-          .style(styles.notTested);
+        sheet.cell(currYIdx, i).value("Pending").style(styles.notTested);
       }
     }
 
     currYIdx += printBlock(sheet, element, maxWidths, {
       x: baseContentColumn + 1,
-      y: currYIdx
+      y: currYIdx,
     });
   });
 }
@@ -297,16 +285,16 @@ function printBlock(
     // Place the feature description in the box below the tags
     printLongtext(sheet, description.replace(/\n +/g, "\n").trim(), {
       x: base.x,
-      y: currYIdx
+      y: currYIdx,
     });
     currYIdx += 1;
   }
 
   currYIdx += 1;
 
-  block.steps.forEach(step => {
+  block.steps.forEach((step) => {
     // Comments
-    step.beforeComments.forEach(comment => {
+    step.beforeComments.forEach((comment) => {
       sheet
         .cell(currYIdx, base.x + 1)
         .value(comment)
@@ -325,7 +313,7 @@ function printBlock(
     const textCell = sheet.cell(currYIdx, base.x + 2);
     textCell.value(new RichText());
 
-    step.text.split(/(<\w+>)/g).forEach(chunk => {
+    step.text.split(/(<\w+>)/g).forEach((chunk) => {
       const style = chunk.match(/<\w+>/) ? styles.template : styles.normal;
       textCell.value().add(chunk, style);
     });
@@ -335,20 +323,20 @@ function printBlock(
     if (step.dataTable.length > 0) {
       currYIdx += printDataTable(sheet, step.dataTable, maxWidths, {
         x: base.x + 2,
-        y: currYIdx
+        y: currYIdx,
       });
     }
 
     if (step.docString) {
       printLongtext(sheet, step.docString, {
         x: base.x + 2,
-        y: currYIdx
+        y: currYIdx,
       });
       currYIdx += 1;
     }
   });
 
-  block.examples.forEach(example => {
+  block.examples.forEach((example) => {
     example.beforeComments.forEach((comment, idx) => {
       sheet
         .cell(currYIdx + idx, base.x)
@@ -357,15 +345,12 @@ function printBlock(
     });
     currYIdx += example.beforeComments.length + 1;
 
-    sheet
-      .cell(currYIdx, base.x)
-      .value("Examples")
-      .style(styles.normal);
+    sheet.cell(currYIdx, base.x).value("Examples").style(styles.normal);
 
     currYIdx += 1;
     currYIdx += printExampleTable(sheet, example, maxWidths, {
       x: base.x + 2,
-      y: currYIdx
+      y: currYIdx,
     });
   });
 
@@ -393,10 +378,7 @@ function printLongtext(sheet: any, text: string, base: CoordinateBase): void {
  * @param {CoordinateBase} base The base x and y coordinates
  */
 function printTags(sheet: any, tags: string[], base: CoordinateBase): void {
-  sheet
-    .cell(base.y, base.x)
-    .value("Tags:")
-    .style(styles.light);
+  sheet.cell(base.y, base.x).value("Tags:").style(styles.light);
 
   sheet
     .cell(base.y, base.x + 1)

@@ -9,7 +9,7 @@ export const parse = (paths: string[]) => {
   const options = {
     includeSource: false,
     includeGherkinDocument: true,
-    includePickles: false
+    includePickles: false,
   };
 
   return gherkin.fromPaths(paths, options);

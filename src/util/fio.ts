@@ -6,7 +6,7 @@ import * as moment from "moment";
 export enum FType {
   File,
   Directory,
-  NonExist
+  NonExist,
 }
 
 export function pathInfo(path: string): FType {
