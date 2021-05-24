@@ -22,7 +22,7 @@ export type Example = {
   afterComments: string[];
 };
 
-type Step = {
+export type Step = {
   keyword: string;
   rawKeyword: string;
   text: string;
