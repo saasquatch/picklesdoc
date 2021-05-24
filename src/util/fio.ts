@@ -57,6 +57,6 @@ export function getOutputFileName(input: string, ext: string): string {
   }
 }
 
-export function getAllPaths(file: string): string[] {
-  return dirname(file).split("/");
+export function getAllPaths(file: string, prefixLength: number): string[] {
+  return dirname(file).split("/").slice(prefixLength);
 }

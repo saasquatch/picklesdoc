@@ -25,6 +25,9 @@ export function latexTemplate(
 \\usepackage{layout}
 
 \\setcounter{tocdepth}{2}
+\\setlength{\\parindent}{0pt}
+
+\\renewcommand{\\familydefault}{\\sfdefault}
 
 \\title{${title}}
 \\author{${author}}
@@ -40,28 +43,48 @@ ${body}
 `;
 }
 
-export function featureTex(input: SubFeature): string {
+export function featureTex(input: SubFeature, depth: number): string {
   const tags = tagsTex(input.tags);
+  const description = descriptionTex(input.description);
+
   const elements = input.featureElements.map(elementTex).join("\n");
-  return `\\section{${sanitize(input.name)}}
-    ${tags} \\par
+  return `\\${getSectionDepth(depth)}{${sanitize(input.name)}}
+    ${tags} ${tags.length > 0 ? "\\par" : ""}
+    ${description}
     ${elements}
 `;
 }
 
 function elementTex(input: FeatureElement): string {
-  if (input.steps.length === 0) return "";
+  const description = descriptionTex(input.description);
+  const beforeComments = commentsTex(input.beforeComments);
+  const afterComments = commentsTex(input.afterComments);
+
   const tags = tagsTex(input.tags);
   const title = `\\textbf{${input.elementType}}: ${sanitize(input.name)}`;
   const steps = stepsTex(input.steps);
   return `\\begin{tcolorbox}
+  ${beforeComments}
+  ${description}
   ${tags} \\par
   ${title} \\par
-  \\begin{itemize}
-    \\setlength\\itemsep{-1mm}
-${steps}
-  \\end{itemize}
+  ${steps.length > 0 ? steps + " \\par" : ""} 
+  ${afterComments}
 \\end{tcolorbox}\n`;
+}
+
+function descriptionTex(description: string): string {
+  return description.length > 0
+    ? `${sanitize(description.trim()).replace("\n\n", "\\par")} \\par`
+    : "";
+}
+
+function commentsTex(comments: string[]): string {
+  return comments.length > 0
+    ? `${comments
+        .map((c) => `\\textcolor{gray}{\\emph{${sanitize(c)}}}`)
+        .join("\\par \n")} \\par`
+    : "";
 }
 
 function tagsTex(tags: string[]): string {
@@ -71,8 +94,10 @@ function tagsTex(tags: string[]): string {
 }
 
 function stepsTex(steps: Step[]): string {
+  if (steps.length === 0) return "";
+
   let color = "red";
-  return steps
+  const stepTex = steps
     .map((step) => {
       color =
         step.keyword.toLowerCase() === "and" ? color : stepColor(step.keyword);
@@ -81,6 +106,11 @@ function stepsTex(steps: Step[]): string {
       }}} ${sanitize(step.text)}`;
     })
     .join("\n");
+
+  return `\\begin{itemize}
+    \\setlength\\itemsep{-1mm}
+${stepTex}
+  \\end{itemize}`;
 }
 
 function stepColor(keyword: string): string {
@@ -97,6 +127,21 @@ function stepColor(keyword: string): string {
       return "purple";
     default:
       return "black";
+  }
+}
+
+export function getSectionDepth(depth: number): string {
+  switch (depth) {
+    case 0:
+      return "section";
+    case 1:
+      return "subsection";
+    case 2:
+      return "subsubsection";
+    case 3:
+      return "paragraph";
+    default:
+      throw new Error(`Depth too large! Max folder structure depth is 3`);
   }
 }
 

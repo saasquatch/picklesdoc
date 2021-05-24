@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import * as yargs from "yargs";
-export const version = "1.0.3";
+export const version = "1.2.0";
 
 yargs
   .usage("\nUsage: picklesdoc <cmd> [args]")

@@ -77,7 +77,7 @@ export const handler = async (argv: Arguments) => {
 
   wbInit(wb, testers);
   json.features.forEach((f) => {
-    const allRelativePaths = getAllPaths(f.relativeFolder);
+    const allRelativePaths = getAllPaths(f.relativeFolder, 0);
     let curr = toc;
 
     // Use the parsed path stack to traverse the TOC tree

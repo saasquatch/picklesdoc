@@ -1,8 +1,19 @@
+import { version } from "../index";
 import { generate as generateJson } from "../util/json";
-import { pathInfo, gherkins, getOutputFileName, FType } from "../util/fio";
+import {
+  pathInfo,
+  gherkins,
+  getOutputFileName,
+  FType,
+  getAllPaths,
+} from "../util/fio";
 import { Arguments } from "yargs";
 import { writeFileSync } from "fs";
-import { featureTex, latexTemplate } from "../util/tex-feature";
+import {
+  featureTex,
+  latexTemplate,
+  getSectionDepth,
+} from "../util/tex-feature";
 
 export const command = "tex <input> [out]";
 export const desc = "Generate a LaTeX report of the feature or features";
@@ -25,14 +36,33 @@ export const handler = async (argv: Arguments) => {
 
   const outFile = getOutputFileName(argv.out as string, ".tex");
   const inFile = argv.input as string;
+  const basePathLength = getAllPaths(inFile, 0).length;
   const files =
     pathInfo(inFile) === FType.Directory ? gherkins(inFile) : [inFile];
   const json = await generateJson(files);
+  const createdSections = new Set<string>();
 
   const body = json.features
-    .map((feature) => {
-      const tex = featureTex(feature.feature);
-      return tex;
+    .map((f) => {
+      let output = "";
+      const allRelativePaths = getAllPaths(
+        f.relativeFolder,
+        basePathLength + 1
+      );
+
+      if (allRelativePaths.length !== 0) {
+        allRelativePaths.forEach((subPath, depth) => {
+          if (!createdSections.has(subPath)) {
+            output += `\\${getSectionDepth(depth)}{${
+              subPath.charAt(0).toUpperCase() + subPath.slice(1)
+            }}`;
+            createdSections.add(subPath);
+          }
+        });
+      }
+
+      output += featureTex(f.feature, allRelativePaths.length);
+      return output;
     })
     .join("\n");
 
@@ -50,7 +80,7 @@ export const handler = async (argv: Arguments) => {
   const date = dateFormat.map(format).join(" ");
 
   const title = "Features Overview";
-  const author = "picklesdoc v1.1.2";
+  const author = `picklesdoc v${version}`;
 
   const output = latexTemplate(title, author, date, body);
 
