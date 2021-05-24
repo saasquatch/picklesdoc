@@ -1,7 +1,7 @@
-import { statSync, mkdirSync } from "fs";
-import { dirname, parse } from "path";
+import { mkdirSync, statSync } from "fs";
 import * as glob from "glob";
 import * as moment from "moment";
+import { dirname, parse } from "path";
 
 export enum FType {
   File,

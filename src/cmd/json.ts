@@ -1,7 +1,7 @@
-import { generate as generateJson } from "../util/json";
-import { pathInfo, gherkins, getOutputFileName } from "../util/fio";
-import { Arguments } from "yargs";
 import { writeFileSync } from "fs";
+import { Arguments } from "yargs";
+import { getOutputFileName, gherkins, pathInfo } from "../util/fio";
+import { generate as generateJson } from "../util/json";
 
 export const command = "json <input> [out]";
 export const desc = "Parse the provided file or directory into JSON";

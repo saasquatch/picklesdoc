@@ -1,4 +1,4 @@
-import { Step, SubFeature, FeatureElement } from "./json";
+import { FeatureElement, Step, SubFeature } from "./json";
 
 /**
  * LaTeX document template

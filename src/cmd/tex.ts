@@ -1,18 +1,18 @@
+import { writeFileSync } from "fs";
+import { Arguments } from "yargs";
 import { version } from "../index";
-import { generate as generateJson } from "../util/json";
 import {
-  pathInfo,
-  gherkins,
-  getOutputFileName,
   FType,
   getAllPaths,
+  getOutputFileName,
+  gherkins,
+  pathInfo,
 } from "../util/fio";
-import { Arguments } from "yargs";
-import { writeFileSync } from "fs";
+import { generate as generateJson } from "../util/json";
 import {
   featureTex,
-  latexTemplate,
   getSectionDepth,
+  latexTemplate,
 } from "../util/tex-feature";
 
 export const command = "tex <input> [out]";

@@ -2,18 +2,22 @@
 import * as XlsxPopulate from "xlsx-populate";
 // @ts-ignore - No typedefs for xlsx-populate
 import { RichText } from "xlsx-populate";
-
-import { generate as generateJson } from "../util/json";
-import { ElementType, Example, FeatureElement, Feature } from "../util/json";
-import { styles } from "../util/styles";
+import { Arguments } from "yargs";
 import {
   FType,
-  pathInfo,
-  gherkins,
-  getOutputFileName,
   getAllPaths,
+  getOutputFileName,
+  gherkins,
+  pathInfo,
 } from "../util/fio";
-import { Arguments } from "yargs";
+import {
+  ElementType,
+  Example,
+  Feature,
+  FeatureElement,
+  generate as generateJson,
+} from "../util/json";
+import { styles } from "../util/styles";
 
 export const command = "xlsx <input> [out]";
 export const desc = "Parse the provided file or directory into XLSX";

@@ -1,7 +1,6 @@
 import * as moment from "moment";
-
-import { parse } from "./parser";
 import { version } from "../index";
+import { parse } from "./parser";
 
 export enum ElementType {
   Rule = "Rule",
