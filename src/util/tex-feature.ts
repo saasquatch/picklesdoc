@@ -1,5 +1,8 @@
 import { Step, SubFeature, FeatureElement } from "./json";
 
+/**
+ * LaTeX document template
+ */
 export function latexTemplate(
   title: string,
   author: string,
@@ -43,6 +46,9 @@ ${body}
 `;
 }
 
+/**
+ * Generates the LaTeX markup for a single feature file
+ */
 export function featureTex(input: SubFeature, depth: number): string {
   const tags = tagsTex(input.tags);
   const description = descriptionTex(input.description);
@@ -55,6 +61,10 @@ export function featureTex(input: SubFeature, depth: number): string {
 `;
 }
 
+/**
+ * Generates the LaTeX markup for a single feature element
+ * (Scenario, ScenarioOutline, Rule or Background)
+ */
 function elementTex(input: FeatureElement): string {
   const description = descriptionTex(input.description);
   const beforeComments = commentsTex(input.beforeComments);
@@ -68,17 +78,23 @@ function elementTex(input: FeatureElement): string {
   ${description}
   ${tags} \\par
   ${title} \\par
-  ${steps.length > 0 ? steps + " \\par" : ""} 
+  ${steps.length > 0 ? steps + " \\par" : ""}
   ${afterComments}
 \\end{tcolorbox}\n`;
 }
 
+/**
+ * Generates a block of text for a feature or element description
+ */
 function descriptionTex(description: string): string {
   return description.length > 0
     ? `${sanitize(description.trim()).replace("\n\n", "\\par")} \\par`
     : "";
 }
 
+/**
+ * Gray and italicized block of text for feature comments
+ */
 function commentsTex(comments: string[]): string {
   return comments.length > 0
     ? `${comments
@@ -87,12 +103,19 @@ function commentsTex(comments: string[]): string {
     : "";
 }
 
+/**
+ * Gray and bold text for feature or element tags
+ */
 function tagsTex(tags: string[]): string {
   return tags
     .map((tag) => `\\textcolor{gray}{\\textbf{${sanitize(tag)}}}`)
     .join(" ");
 }
 
+/**
+ * Generates the \itemize block for the steps of an element
+ * (given, when, then, etc)
+ */
 function stepsTex(steps: Step[]): string {
   if (steps.length === 0) return "";
 

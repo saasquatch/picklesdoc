@@ -28,6 +28,11 @@ export const builder = (yargs: any) => {
       describe:
         "Output file or directory. Will print to STDOUT if not specified",
       type: "file",
+    })
+    .option("title", {
+      describe: "The title of the document",
+      type: "string",
+      default: "Features Report",
     });
 };
 
@@ -50,6 +55,8 @@ export const handler = async (argv: Arguments) => {
         basePathLength + 1
       );
 
+      // Add the folder sections to the document so that we get
+      // the right TOC structure
       if (allRelativePaths.length !== 0) {
         allRelativePaths.forEach((subPath, depth) => {
           if (!createdSections.has(subPath)) {
@@ -79,7 +86,7 @@ export const handler = async (argv: Arguments) => {
   };
   const date = dateFormat.map(format).join(" ");
 
-  const title = "Features Overview";
+  const title = argv.title as string;
   const author = `picklesdoc v${version}`;
 
   const output = latexTemplate(title, author, date, body);
