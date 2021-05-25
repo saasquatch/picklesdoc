@@ -13,10 +13,7 @@ export function latexTemplate(
 \\usepackage[T1]{fontenc}
 \\usepackage[dvipsnames,table]{xcolor}
 \\usepackage{tcolorbox}
-\\usepackage{systeme}
 \\usepackage{times}
-\\usepackage{fancyhdr}
-\\usepackage{graphicx}
 \\usepackage{textcomp}
 \\usepackage{tabularx}
 \\usepackage{tocloft}
