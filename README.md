@@ -41,7 +41,7 @@ you will need another program to convert it to a PDF. `picklesdoc` development u
 - `out` Output file or directory. Will print to `STDOUT` if not specified
 ##### Options
 * `-h` `--help` Show help [boolean]
-* `--title` Title for the LaTeX document. Defaults to "Features Report"
+* `--title` Title for the LaTeX document. [string] [default: "Features Report"]
 ##### Examples
 ```
 picklesdoc tex ./features my-document.tex --title="Company Features Report"
