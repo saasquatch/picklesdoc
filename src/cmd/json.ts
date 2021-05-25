@@ -4,7 +4,7 @@ import { getOutputFileName, gherkins, pathInfo } from "../util/fio";
 import { generate as generateJson } from "../util/json";
 
 export const command = "json <input> [out]";
-export const desc = "Parse the provided file or directory into JSON";
+export const desc = "Convert the provided file or directory into JSON";
 
 export const builder = (yargs: any) => {
   return yargs

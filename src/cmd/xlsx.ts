@@ -20,7 +20,7 @@ import {
 import { styles } from "../util/styles";
 
 export const command = "xlsx <input> [out]";
-export const desc = "Parse the provided file or directory into XLSX";
+export const desc = "Convert the provided file or directory into XLSX";
 
 export const builder = (yargs: any) => {
   return yargs
