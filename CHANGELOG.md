@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
  - Added support for generating LaTeX documents out of Gherkin specs
 
+### Removed
+ - Removed `Unreleased` section from CHANGELOG.md
+
 ## [1.1.2] - (2021-05-24)
 ### Added
  - Added README installation instructions, usage, and examples
-
-### Removed
- - Removed `Unreleased` section from CHANGELOG.md
 
 ### Fixed
  - Fix crash caused by duplicate sheet slug names
