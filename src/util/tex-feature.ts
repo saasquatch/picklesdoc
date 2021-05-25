@@ -1,4 +1,4 @@
-import { FeatureElement, Step, SubFeature } from "./json";
+import { Example, FeatureElement, Step, SubFeature } from "./json";
 
 /**
  * LaTeX document template
@@ -11,7 +11,7 @@ export function latexTemplate(
 ): string {
   return `\\documentclass[11pt]{article}
 \\usepackage[T1]{fontenc}
-\\usepackage[dvipsnames]{xcolor}
+\\usepackage[dvipsnames,table]{xcolor}
 \\usepackage{tcolorbox}
 \\usepackage{systeme}
 \\usepackage{times}
@@ -19,6 +19,8 @@ export function latexTemplate(
 \\usepackage{graphicx}
 \\usepackage{textcomp}
 \\usepackage{tabularx}
+\\usepackage{tocloft}
+\\usepackage[hidelinks]{hyperref}
 
 \\usepackage[
     margin=0.7in,
@@ -31,6 +33,7 @@ export function latexTemplate(
 \\setlength{\\parindent}{0pt}
 
 \\renewcommand{\\familydefault}{\\sfdefault}
+\\addtolength{\\cftsubsecnumwidth}{1em}
 
 \\title{${title}}
 \\author{${author}}
@@ -73,14 +76,38 @@ function elementTex(input: FeatureElement): string {
   const tags = tagsTex(input.tags);
   const title = `\\textbf{${input.elementType}}: ${sanitize(input.name)}`;
   const steps = stepsTex(input.steps);
+  const examples = input.examples.map(examplesTex).join("\\par\n");
   return `\\begin{tcolorbox}
   ${beforeComments}
   ${description}
   ${tags} \\par
   ${title} \\par
   ${steps.length > 0 ? steps + " \\par" : ""}
+  ${examples}
   ${afterComments}
 \\end{tcolorbox}\n`;
+}
+
+function examplesTex(example: Example): string {
+  const cols = example.header.length;
+  const beforeComments = commentsTex(example.beforeComments);
+  const afterComments = commentsTex(example.afterComments);
+
+  return `\\textbf{Examples}:\\par
+  ${beforeComments}
+  \\begin{center}
+    \\begin{tabularx}{\\textwidth}{ ${"| X ".repeat(cols)}| }
+    \\hline
+    ${example.header
+      .map((h) => `\\cellcolor{blue!25}\\textbf{${sanitize(h)}}`)
+      .join(" & ")} \\\\
+    \\hline
+  ${example.data
+    .map((row) => "    " + row.map(sanitize).join(" & ") + "\\\\ \\hline")
+    .join("\n")}
+    \\end{tabularx}
+  \\end{center}
+  ${afterComments}`;
 }
 
 /**
@@ -190,5 +217,9 @@ function sanitize(input: string): string {
 
   return Array.from(input)
     .map((char) => symbolMap[char] || char)
-    .join("");
+    .join("")
+    .replace(
+      /\\textless{}(.*?)\\textgreater{}/,
+      "\\textcolor{VioletRed}{\\textless{}$1\\textgreater{}}"
+    );
 }
