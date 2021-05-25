@@ -2,21 +2,25 @@
 import * as XlsxPopulate from "xlsx-populate";
 // @ts-ignore - No typedefs for xlsx-populate
 import { RichText } from "xlsx-populate";
-
-import { generate as generateJson } from "../util/json";
-import { ElementType, Example, FeatureElement, Feature } from "../util/json";
-import { styles } from "../util/styles";
+import { Arguments } from "yargs";
 import {
   FType,
-  pathInfo,
-  gherkins,
-  getOutputFileName,
   getAllPaths,
+  getOutputFileName,
+  gherkins,
+  pathInfo,
 } from "../util/fio";
-import { Arguments } from "yargs";
+import {
+  ElementType,
+  Example,
+  Feature,
+  FeatureElement,
+  generate as generateJson,
+} from "../util/json";
+import { styles } from "../util/styles";
 
 export const command = "xlsx <input> [out]";
-export const desc = "Parse the provided file or directory into XLSX";
+export const desc = "Convert the provided file or directory into XLSX";
 
 export const builder = (yargs: any) => {
   return yargs
@@ -77,7 +81,7 @@ export const handler = async (argv: Arguments) => {
 
   wbInit(wb, testers);
   json.features.forEach((f) => {
-    const allRelativePaths = getAllPaths(f.relativeFolder);
+    const allRelativePaths = getAllPaths(f.relativeFolder, 0);
     let curr = toc;
 
     // Use the parsed path stack to traverse the TOC tree

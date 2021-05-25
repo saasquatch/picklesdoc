@@ -1,7 +1,7 @@
-import { statSync, mkdirSync } from "fs";
-import { dirname, parse } from "path";
+import { mkdirSync, statSync } from "fs";
 import * as glob from "glob";
 import * as moment from "moment";
+import { dirname, parse } from "path";
 
 export enum FType {
   File,
@@ -57,6 +57,6 @@ export function getOutputFileName(input: string, ext: string): string {
   }
 }
 
-export function getAllPaths(file: string): string[] {
-  return dirname(file).split("/");
+export function getAllPaths(file: string, prefixLength: number): string[] {
+  return dirname(file).split("/").slice(prefixLength);
 }

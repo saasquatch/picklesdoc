@@ -1,7 +1,6 @@
 import * as moment from "moment";
-
-import { parse } from "./parser";
 import { version } from "../index";
+import { parse } from "./parser";
 
 export enum ElementType {
   Rule = "Rule",
@@ -22,7 +21,7 @@ export type Example = {
   afterComments: string[];
 };
 
-type Step = {
+export type Step = {
   keyword: string;
   rawKeyword: string;
   text: string;
