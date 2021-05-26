@@ -55,10 +55,7 @@ export function featureTex(input: SubFeature, depth: number): string {
 
   const elements = input.featureElements.map(elementTex).join("\n");
   return `\\${getSectionDepth(depth)}{${sanitize(input.name)}}
-    ${tags} ${tags.length > 0 ? "\\par" : ""}
-    ${description}
-    ${elements}
-`;
+${tags} ${tags.length > 0 ? "\\par\n" : ""}${description}${elements}`;
 }
 
 /**
@@ -73,16 +70,16 @@ function elementTex(input: FeatureElement): string {
   const tags = tagsTex(input.tags);
   const title = `\\textbf{${input.elementType}}: ${sanitize(input.name)}`;
   const steps = stepsTex(input.steps);
-  const examples = input.examples.map(examplesTex).join("\\par\n");
-  return `\\begin{tcolorbox}
-  ${beforeComments}
-  ${description}
-  ${tags} \\par
-  ${title} \\par
-  ${steps.length > 0 ? steps + " \\par" : ""}
-  ${examples}
-  ${afterComments}
-\\end{tcolorbox}\n`;
+
+  const examples =
+    input.examples.length > 0
+      ? "\n  " + input.examples.map(examplesTex).join("\\par\n")
+      : "";
+
+  return `\\begin{tcolorbox}${beforeComments}${description}${tags}
+  ${title}\\par
+  ${steps.length > 0 ? steps : ""}
+${examples}${afterComments}\\end{tcolorbox}\n`;
 }
 
 function examplesTex(example: Example): string {
@@ -90,30 +87,30 @@ function examplesTex(example: Example): string {
   const beforeComments = commentsTex(example.beforeComments);
   const afterComments = commentsTex(example.afterComments);
 
-  return `\\textbf{Examples}:\\par
-  ${beforeComments}
+  return `\\textbf{Examples}:\\par${
+    beforeComments.length > 0 ? "\n  " + beforeComments : ""
+  }
   \\begin{center}
     \\begin{tabularx}{\\textwidth}{ ${"| X ".repeat(cols)}| }
-    \\hline
-    ${example.header
-      .map((h) => `\\cellcolor{blue!25}\\textbf{${sanitize(h)}}`)
-      .join(" & ")} \\\\
-    \\hline
-  ${example.data
-    .map((row) => "    " + row.map(sanitize).join(" & ") + "\\\\ \\hline")
-    .join("\n")}
+      \\hline
+      ${example.header
+        .map((h) => `\\cellcolor{blue!25}\\textbf{${sanitize(h)}}`)
+        .join(" & ")} \\\\
+      \\hline
+${example.data
+  .map((row) => " ".repeat(8) + row.map(sanitize).join(" & ") + "\\\\\\hline")
+  .join("\n")}
     \\end{tabularx}
   \\end{center}
-  ${afterComments}`;
+${afterComments.length > 0 ? "  " + afterComments : ""}`;
 }
 
 /**
  * Generates a block of text for a feature or element description
  */
 function descriptionTex(description: string): string {
-  return description.length > 0
-    ? `${sanitize(description.trim()).replace("\n\n", "\\par")} \\par`
-    : "";
+  const d = description.trim();
+  return d.length > 0 ? `${sanitize(d).replace("\n\n", "\\par")} \\par\n` : "";
 }
 
 /**
@@ -123,7 +120,7 @@ function commentsTex(comments: string[]): string {
   return comments.length > 0
     ? `${comments
         .map((c) => `\\textcolor{gray}{\\emph{${sanitize(c)}}}`)
-        .join("\\par \n")} \\par`
+        .join("\\par \n")} \\par\n`
     : "";
 }
 
@@ -131,9 +128,11 @@ function commentsTex(comments: string[]): string {
  * Gray and bold text for feature or element tags
  */
 function tagsTex(tags: string[]): string {
-  return tags
-    .map((tag) => `\\textcolor{gray}{\\textbf{${sanitize(tag)}}}`)
-    .join(" ");
+  return tags.length > 0
+    ? `${tags
+        .map((tag) => `\\textcolor{gray}{\\textbf{${sanitize(tag)}}}`)
+        .join(" ")} \\par`
+    : "";
 }
 
 /**
