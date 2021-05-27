@@ -1,5 +1,20 @@
 import { Example, FeatureElement, Step, SubFeature } from "./json";
 
+const colors = [
+  // MidnightBlue
+  "\\definecolor{c1}{RGB}{0, 103, 149}",
+  // LimeGreen
+  "\\definecolor{c2}{RGB}{141, 199, 62}",
+  // Dandelion
+  "\\definecolor{c3}{RGB}{253, 188, 66}",
+  // Blue
+  "\\definecolor{c4}{RGB}{45, 47, 146}",
+  // Purple
+  "\\definecolor{c5}{RGB}{153, 71, 155}",
+  // VioletRed
+  "\\definecolor{c6}{RGB}{239, 88, 160}",
+].join("\n");
+
 /**
  * LaTeX document template
  */
@@ -31,6 +46,12 @@ export function latexTemplate(
 
 \\renewcommand{\\familydefault}{\\sfdefault}
 \\addtolength{\\cftsubsecnumwidth}{1em}
+
+\\newcommand{\\step}[2]{\\item \\textcolor{#1}{\\textbf{#2}}}
+\\newcommand{\\tag}[1]{\\textcolor{gray}{\\textbf{#1}}}
+\\newcommand{\\comm}[1]{\\textcolor{gray}{\\emph{#1}}}
+
+${colors}
 
 \\title{${title}}
 \\author{${author}}
@@ -118,8 +139,8 @@ function descriptionTex(description: string): string {
  */
 function commentsTex(comments: string[]): string {
   return comments.length > 0
-    ? `${comments
-        .map((c) => `\\textcolor{gray}{\\emph{${sanitize(c)}}}`)
+    ? `\n${comments
+        .map((c) => `\\comm{${sanitize(c)}}`)
         .join("\\par \n")} \\par\n`
     : "";
 }
@@ -129,9 +150,7 @@ function commentsTex(comments: string[]): string {
  */
 function tagsTex(tags: string[]): string {
   return tags.length > 0
-    ? `${tags
-        .map((tag) => `\\textcolor{gray}{\\textbf{${sanitize(tag)}}}`)
-        .join(" ")} \\par`
+    ? `\n  ${tags.map((tag) => `\\tag{${sanitize(tag)}}`).join(" ")} \\par`
     : "";
 }
 
@@ -147,9 +166,7 @@ function stepsTex(steps: Step[]): string {
     .map((step) => {
       color =
         step.keyword.toLowerCase() === "and" ? color : stepColor(step.keyword);
-      return `    \\item \\textcolor{${color}}{\\textbf{${
-        step.keyword
-      }}} ${sanitize(step.text)}`;
+      return `    \\step{${color}}{${step.keyword}} ${sanitize(step.text)}`;
     })
     .join("\n");
 
@@ -162,15 +179,15 @@ ${stepTex}
 function stepColor(keyword: string): string {
   switch (keyword.toLowerCase()) {
     case "given":
-      return "MidnightBlue";
+      return "c1";
     case "when":
-      return "LimeGreen";
+      return "c2";
     case "then":
-      return "Dandelion";
+      return "c3";
     case "and":
-      return "blue";
+      return "c4";
     case "but":
-      return "purple";
+      return "c5";
     default:
       return "black";
   }
@@ -214,8 +231,5 @@ function sanitize(input: string): string {
   return Array.from(input)
     .map((char) => symbolMap[char] || char)
     .join("")
-    .replace(
-      /\\textless{}(.*?)\\textgreater{}/,
-      "\\textcolor{VioletRed}{\\textless{}$1\\textgreater{}}"
-    );
+    .replace(/(\\textless{}.*?\\textgreater{})/, "\\textcolor{c6}{$1}");
 }
