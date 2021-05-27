@@ -1,5 +1,20 @@
 import { Example, FeatureElement, Step, SubFeature } from "./json";
 
+const colors = [
+  // MidnightBlue
+  "\\definecolor{c1}{RGB}{0, 103, 149}",
+  // LimeGreen
+  "\\definecolor{c2}{RGB}{141, 199, 62}",
+  // Dandelion
+  "\\definecolor{c3}{RGB}{253, 188, 66}",
+  // Blue
+  "\\definecolor{c4}{RGB}{45, 47, 146}",
+  // Purple
+  "\\definecolor{c5}{RGB}{153, 71, 155}",
+  // VioletRed
+  "\\definecolor{c6}{RGB}{239, 88, 160}",
+].join("\n");
+
 /**
  * LaTeX document template
  */
@@ -32,6 +47,12 @@ export function latexTemplate(
 \\renewcommand{\\familydefault}{\\sfdefault}
 \\addtolength{\\cftsubsecnumwidth}{1em}
 
+\\newcommand{\\step}[2]{\\item \\textcolor{#1}{\\textbf{#2}}}
+\\newcommand{\\tag}[1]{\\textcolor{gray}{\\textbf{#1}}}
+\\newcommand{\\comm}[1]{\\textcolor{gray}{\\emph{#1}}}
+
+${colors}
+
 \\title{${title}}
 \\author{${author}}
 \\date{${date}}
@@ -55,10 +76,7 @@ export function featureTex(input: SubFeature, depth: number): string {
 
   const elements = input.featureElements.map(elementTex).join("\n");
   return `\\${getSectionDepth(depth)}{${sanitize(input.name)}}
-    ${tags} ${tags.length > 0 ? "\\par" : ""}
-    ${description}
-    ${elements}
-`;
+${tags} ${tags.length > 0 ? "\\par\n" : ""}${description}${elements}`;
 }
 
 /**
@@ -73,16 +91,16 @@ function elementTex(input: FeatureElement): string {
   const tags = tagsTex(input.tags);
   const title = `\\textbf{${input.elementType}}: ${sanitize(input.name)}`;
   const steps = stepsTex(input.steps);
-  const examples = input.examples.map(examplesTex).join("\\par\n");
-  return `\\begin{tcolorbox}
-  ${beforeComments}
-  ${description}
-  ${tags} \\par
-  ${title} \\par
-  ${steps.length > 0 ? steps + " \\par" : ""}
-  ${examples}
-  ${afterComments}
-\\end{tcolorbox}\n`;
+
+  const examples =
+    input.examples.length > 0
+      ? "\n  " + input.examples.map(examplesTex).join("\\par\n")
+      : "";
+
+  return `\\begin{tcolorbox}${beforeComments}${description}${tags}
+  ${title}\\par
+  ${steps.length > 0 ? steps : ""}
+${examples}${afterComments}\\end{tcolorbox}\n`;
 }
 
 function examplesTex(example: Example): string {
@@ -90,30 +108,30 @@ function examplesTex(example: Example): string {
   const beforeComments = commentsTex(example.beforeComments);
   const afterComments = commentsTex(example.afterComments);
 
-  return `\\textbf{Examples}:\\par
-  ${beforeComments}
+  return `\\textbf{Examples}:\\par${
+    beforeComments.length > 0 ? "\n  " + beforeComments : ""
+  }
   \\begin{center}
     \\begin{tabularx}{\\textwidth}{ ${"| X ".repeat(cols)}| }
-    \\hline
-    ${example.header
-      .map((h) => `\\cellcolor{blue!25}\\textbf{${sanitize(h)}}`)
-      .join(" & ")} \\\\
-    \\hline
-  ${example.data
-    .map((row) => "    " + row.map(sanitize).join(" & ") + "\\\\ \\hline")
-    .join("\n")}
+      \\hline
+      ${example.header
+        .map((h) => `\\cellcolor{blue!25}\\textbf{${sanitize(h)}}`)
+        .join(" & ")} \\\\
+      \\hline
+${example.data
+  .map((row) => " ".repeat(8) + row.map(sanitize).join(" & ") + "\\\\\\hline")
+  .join("\n")}
     \\end{tabularx}
   \\end{center}
-  ${afterComments}`;
+${afterComments.length > 0 ? "  " + afterComments : ""}`;
 }
 
 /**
  * Generates a block of text for a feature or element description
  */
 function descriptionTex(description: string): string {
-  return description.length > 0
-    ? `${sanitize(description.trim()).replace("\n\n", "\\par")} \\par`
-    : "";
+  const d = description.trim();
+  return d.length > 0 ? `${sanitize(d).replace("\n\n", "\\par")} \\par\n` : "";
 }
 
 /**
@@ -121,9 +139,9 @@ function descriptionTex(description: string): string {
  */
 function commentsTex(comments: string[]): string {
   return comments.length > 0
-    ? `${comments
-        .map((c) => `\\textcolor{gray}{\\emph{${sanitize(c)}}}`)
-        .join("\\par \n")} \\par`
+    ? `\n${comments
+        .map((c) => `\\comm{${sanitize(c)}}`)
+        .join("\\par \n")} \\par\n`
     : "";
 }
 
@@ -131,9 +149,9 @@ function commentsTex(comments: string[]): string {
  * Gray and bold text for feature or element tags
  */
 function tagsTex(tags: string[]): string {
-  return tags
-    .map((tag) => `\\textcolor{gray}{\\textbf{${sanitize(tag)}}}`)
-    .join(" ");
+  return tags.length > 0
+    ? `\n  ${tags.map((tag) => `\\tag{${sanitize(tag)}}`).join(" ")} \\par`
+    : "";
 }
 
 /**
@@ -148,9 +166,7 @@ function stepsTex(steps: Step[]): string {
     .map((step) => {
       color =
         step.keyword.toLowerCase() === "and" ? color : stepColor(step.keyword);
-      return `    \\item \\textcolor{${color}}{\\textbf{${
-        step.keyword
-      }}} ${sanitize(step.text)}`;
+      return `    \\step{${color}}{${step.keyword}} ${sanitize(step.text)}`;
     })
     .join("\n");
 
@@ -163,15 +179,15 @@ ${stepTex}
 function stepColor(keyword: string): string {
   switch (keyword.toLowerCase()) {
     case "given":
-      return "MidnightBlue";
+      return "c1";
     case "when":
-      return "LimeGreen";
+      return "c2";
     case "then":
-      return "Dandelion";
+      return "c3";
     case "and":
-      return "blue";
+      return "c4";
     case "but":
-      return "purple";
+      return "c5";
     default:
       return "black";
   }
@@ -215,8 +231,5 @@ function sanitize(input: string): string {
   return Array.from(input)
     .map((char) => symbolMap[char] || char)
     .join("")
-    .replace(
-      /\\textless{}(.*?)\\textgreater{}/,
-      "\\textcolor{VioletRed}{\\textless{}$1\\textgreater{}}"
-    );
+    .replace(/(\\textless{}.*?\\textgreater{})/, "\\textcolor{c6}{$1}");
 }

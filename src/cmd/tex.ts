@@ -62,7 +62,7 @@ export const handler = async (argv: Arguments) => {
           if (!createdSections.has(subPath)) {
             output += `\\${getSectionDepth(depth)}{${
               subPath.charAt(0).toUpperCase() + subPath.slice(1)
-            }}`;
+            }}\n`;
             createdSections.add(subPath);
           }
         });
