@@ -15,6 +15,7 @@ import {
   latexTemplate,
 } from "../util/tex-feature";
 
+
 export const command = "tex <input> [out]";
 export const desc = "Generate a LaTeX report of the feature or features";
 
@@ -73,11 +74,11 @@ export const handler = async (argv: Arguments) => {
     })
     .join("\n");
 
-  let dateFormat = [
+  const dateFormat = [
     { month: "short" },
     { day: "numeric" },
     { year: "numeric" },
-  ];
+  ] as const;
 
   const currentDate = new Date();
   const format = (m: Intl.DateTimeFormatOptions) => {
@@ -86,6 +87,7 @@ export const handler = async (argv: Arguments) => {
   };
   const date = dateFormat.map(format).join(" ");
 
+  
   const title = argv.title as string;
   const author = `picklesdoc v${version}`;
 
