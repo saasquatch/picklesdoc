@@ -6,6 +6,7 @@ export enum ElementType {
   Rule = "Rule",
   Background = "Background",
   Scenario = "Scenario",
+  Example = "Example",
   ScenarioOutline = "Scenario Outline",
 }
 
@@ -31,10 +32,28 @@ export type Step = {
   dataTable: string[][];
 };
 
-export type FeatureElement = {
-  steps: Step[];
+export type ScenarioElement = {
+  elementType: ElementType.Scenario;
+} & BaseFeatureElement;
+
+export type ExampleElement = {
+  elementType: ElementType.Example;
+} & BaseFeatureElement;
+
+export type ScenarioOutlineElement = {
+  elementType: ElementType.ScenarioOutline;
   examples: Example[];
-  elementType: ElementType;
+} & BaseFeatureElement;
+
+export type BackgroundElement = {
+  elementType: ElementType.Background;
+} & BaseFeatureElement;
+
+export type BaseFeatureElement = {
+  steps: Step[];
+} & BaseElement;
+
+type BaseElement = {
   name: string;
   description: string;
   location: Location;
@@ -46,13 +65,22 @@ export type FeatureElement = {
   };
   beforeComments: string[];
   afterComments: string[];
-};
+}
+
+export type FeatureElement = ScenarioElement | ScenarioOutlineElement | BackgroundElement | ExampleElement;
+
+export type RuleElement = {
+  elementType: ElementType.Rule;
+  featureElements: FeatureElement[];
+} & BaseElement;
+
+export type FeatureOrRule = RuleElement | FeatureElement;
 
 export type SubFeature = {
+  featureElements: FeatureOrRule[];
   name: string;
   description: string;
   location: Location;
-  featureElements: FeatureElement[];
   tags: string[];
   result: {
     wasExecuted: boolean;
