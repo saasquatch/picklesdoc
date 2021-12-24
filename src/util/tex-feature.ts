@@ -1,4 +1,4 @@
-import { Example, FeatureElement, Step, SubFeature } from "./json";
+import { Example, FeatureOrRule, RuleElement, FeatureElement, Step, SubFeature, ElementType } from "./json";
 
 const colors = [
   // MidnightBlue
@@ -83,24 +83,50 @@ ${tags} ${tags.length > 0 ? "\\par\n" : ""}${description}${elements}`;
  * Generates the LaTeX markup for a single feature element
  * (Scenario, ScenarioOutline, Rule or Background)
  */
-function elementTex(input: FeatureElement): string {
+function elementTex(input: FeatureOrRule): string {
   const description = descriptionTex(input.description);
   const beforeComments = commentsTex(input.beforeComments);
   const afterComments = commentsTex(input.afterComments);
 
   const tags = tagsTex(input.tags);
   const title = `\\textbf{${input.elementType}}: ${sanitize(input.name)}`;
-  const steps = stepsTex(input.steps);
 
-  const examples =
-    input.examples.length > 0
-      ? "\n  " + input.examples.map(examplesTex).join("\\par\n")
-      : "";
-
+  if (input.elementType == ElementType.Rule) {
+    input.featureElements.forEach((input: FeatureElement) => {
+      const steps = stepsTex(input.steps);
+    if (input.elementType == ElementType.ScenarioOutline) {
+      const examples =
+      input.examples.length > 0
+        ? "\n  " + input.examples.map(examplesTex).join("\\par\n")
+        : "";
+      return `\\begin{tcolorbox}${beforeComments}${description}${tags}
+      ${title}\\par
+      ${steps.length > 0 ? steps : ""} 
+      ${examples}${afterComments}\\end{tcolorbox}\n`;
+    }
+    return `\\begin{tcolorbox}${beforeComments}${description}${tags}
+    ${title}\\par
+    ${steps.length > 0 ? steps : ""}\\end{tcolorbox}\n`
+    })
+  } else {
+    const steps = stepsTex(input.steps);
+    if (input.elementType == ElementType.ScenarioOutline) {
+      const examples =
+      input.examples.length > 0
+        ? "\n  " + input.examples.map(examplesTex).join("\\par\n")
+        : "";
+      return `\\begin{tcolorbox}${beforeComments}${description}${tags}
+      ${title}\\par
+      ${steps.length > 0 ? steps : ""} 
+      ${examples}${afterComments}\\end{tcolorbox}\n`;
+ 
+    }
+    return `\\begin{tcolorbox}${beforeComments}${description}${tags}
+    ${title}\\par
+    ${steps.length > 0 ? steps : ""}\\end{tcolorbox}\n`
+  }
   return `\\begin{tcolorbox}${beforeComments}${description}${tags}
-  ${title}\\par
-  ${steps.length > 0 ? steps : ""}
-${examples}${afterComments}\\end{tcolorbox}\n`;
+    ${title}\\par\\end{tcolorbox}\n`
 }
 
 function examplesTex(example: Example): string {

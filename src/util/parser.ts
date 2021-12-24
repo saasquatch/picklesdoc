@@ -1,5 +1,4 @@
 import * as gherkin from "gherkin";
-
 /**
  * Parses the feature file and returns the stream
  * @param {String[]} paths The path to the feature file
@@ -12,5 +11,5 @@ export function parse(paths: string[]) {
     includePickles: false,
   };
 
-  return gherkin.fromPaths(paths, options);
+  return gherkin.default.fromPaths(paths, options);
 }

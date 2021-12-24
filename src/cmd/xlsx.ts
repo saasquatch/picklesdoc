@@ -15,7 +15,10 @@ import {
   Example,
   Feature,
   FeatureElement,
+  FeatureOrRule,
   generate as generateJson,
+  RuleElement,
+  Step,
 } from "../util/json";
 import { styles } from "../util/styles";
 
@@ -273,7 +276,7 @@ function printFeatureSheet(
  */
 function printBlock(
   sheet: any,
-  block: FeatureElement,
+  block: FeatureOrRule,
   maxWidths: MaxWidths,
   base: CoordinateBase
 ): number {
@@ -307,70 +310,185 @@ function printBlock(
 
   currYIdx += 1;
 
-  block.steps.forEach((step) => {
-    // Comments
-    step.beforeComments.forEach((comment) => {
+  var baseX: number = base.x
+  var baseY: number = base.y
+
+  if (block.elementType == ElementType.Rule) {
+    //adding a column to the right to start the feature elements within the rules.
+    let featureX: number = baseX += 1
+
+    //adding a line space just before listing the features. 
+    baseY += 1
+    block.featureElements.forEach((block: FeatureElement) => {
+      
+      block.beforeComments.forEach((comment, idx) => {
+        sheet
+          .cell(baseY + idx + 1, baseX)
+          .value(comment)
+          .style(styles.light);
+      });
+
+      // shifting the column to the right by 1 for features within rules. 
+      baseY += 1
+
       sheet
-        .cell(currYIdx, base.x + 1)
-        .value(comment)
-        .style(styles.light);
+      .cell(baseY + block.beforeComments.length, featureX)
+      .value(`${block.elementType}: ${block.name}`)
+      .style(styles.bold);
+  
+      // baseY = baseY + 1 + block.beforeComments.length;
 
-      currYIdx += 1;
+      if (block.tags.length > 0) {
+        printTags(sheet, block.tags, { x: baseX, y: baseY });
+        baseY += 1;
+      }
+  
+      const { description } = block;
+      if (description) {
+        // Place the feature description in the box below the tags
+        printLongtext(sheet, description.replace(/\n +/g, "\n").trim(), {
+          x: baseX,
+          y: baseY + 1,
+        });
+        baseY += 1;
+      }
+      baseY += 1;
+
+      block.steps.forEach((step) => {
+        // Comments
+        step.beforeComments.forEach((comment) => {
+          sheet
+            .cell(baseY, baseX + 1) 
+            .value(comment)
+            .style(styles.light);
+        });
+    
+        // Step keyword
+        sheet
+          .cell(baseY, baseX + 1)
+          .value(`${step.keyword} `)
+          .style(styles.stepKeyword);
+    
+        // Step text
+        const textCell = sheet.cell(baseY, baseX + 2);
+        textCell.value(new RichText());
+    
+        step.text.split(/(<\w+>)/g).forEach((chunk) => {
+          const style = chunk.match(/<\w+>/) ? styles.template : styles.normal;
+          textCell.value().add(chunk, style);
+        });
+    
+        // Step data table (if present)
+        baseY += 1;
+        if (step.dataTable.length > 0) {
+          baseY += printDataTable(sheet, step.dataTable, maxWidths, {
+            x: baseX + 2,
+            y: baseY,
+          });
+        }
+    
+        if (step.docString) {
+          printLongtext(sheet, step.docString, {
+            x: baseX + 4,
+            y: baseY,
+          });
+          baseY += 1;
+        }
+      });
+    
+      if (block.elementType == ElementType.ScenarioOutline){
+        block.examples.forEach((example) => {
+          example.beforeComments.forEach((comment, idx) => {
+            sheet
+              .cell(baseY + idx, baseX)
+              .value(comment)
+              .style(styles.light);
+          });
+          baseY += example.beforeComments.length + 1;
+      
+          sheet.cell(baseY, baseX).value("Examples").style(styles.normal);
+      
+          baseY += 1;
+          baseY += printExampleTable(sheet, example, maxWidths, {
+            x: baseX + 1,
+            y: baseY,
+          });
+        });
+      }
+    })
+
+  }else {
+
+    //adding a line space just before listing the features. 
+    baseY += 1
+    
+    block.steps.forEach((step) => {
+      // Comments
+      step.beforeComments.forEach((comment) => {
+        sheet
+          .cell(baseY, baseX + 1)
+          .value(comment)
+          .style(styles.light);
+  
+          baseY += 1;
+      });
+  
+      // Step keyword
+      sheet
+        .cell(baseY, baseX + 1)
+        .value(`${step.keyword} `)
+        .style(styles.stepKeyword);
+  
+      // Step text
+      const textCell = sheet.cell(baseY, baseX + 2);
+      textCell.value(new RichText());
+  
+      step.text.split(/(<\w+>)/g).forEach((chunk) => {
+        const style = chunk.match(/<\w+>/) ? styles.template : styles.normal;
+        textCell.value().add(chunk, style);
+      });
+  
+      // Step data table (if present)
+      baseY += 1;
+      if (step.dataTable.length > 0) {
+        baseY += printDataTable(sheet, step.dataTable, maxWidths, {
+          x: baseX + 2,
+          y: baseY,
+        });
+      }
+  
+      if (step.docString) {
+        printLongtext(sheet, step.docString, {
+          x: baseX + 2,
+          y: baseY,
+        });
+        baseY += 1;
+      }
     });
-
-    // Step keyword
-    sheet
-      .cell(currYIdx, base.x + 1)
-      .value(`${step.keyword} `)
-      .style(styles.stepKeyword);
-
-    // Step text
-    const textCell = sheet.cell(currYIdx, base.x + 2);
-    textCell.value(new RichText());
-
-    step.text.split(/(<\w+>)/g).forEach((chunk) => {
-      const style = chunk.match(/<\w+>/) ? styles.template : styles.normal;
-      textCell.value().add(chunk, style);
-    });
-
-    // Step data table (if present)
-    currYIdx += 1;
-    if (step.dataTable.length > 0) {
-      currYIdx += printDataTable(sheet, step.dataTable, maxWidths, {
-        x: base.x + 2,
-        y: currYIdx,
+  
+    if (block.elementType == ElementType.ScenarioOutline){
+      block.examples.forEach((example) => {
+        example.beforeComments.forEach((comment, idx) => {
+          sheet
+            .cell(baseY + idx, baseX)
+            .value(comment)
+            .style(styles.light);
+        });
+        baseY += example.beforeComments.length + 1;
+    
+        sheet.cell(baseY, baseX).value("Examples").style(styles.normal);
+    
+        baseY += 1;
+        baseY += printExampleTable(sheet, example, maxWidths, {
+          x: baseX + 1,
+          y: baseY,
+        });
       });
     }
-
-    if (step.docString) {
-      printLongtext(sheet, step.docString, {
-        x: base.x + 2,
-        y: currYIdx,
-      });
-      currYIdx += 1;
-    }
-  });
-
-  block.examples.forEach((example) => {
-    example.beforeComments.forEach((comment, idx) => {
-      sheet
-        .cell(currYIdx + idx, base.x)
-        .value(comment)
-        .style(styles.light);
-    });
-    currYIdx += example.beforeComments.length + 1;
-
-    sheet.cell(currYIdx, base.x).value("Examples").style(styles.normal);
-
-    currYIdx += 1;
-    currYIdx += printExampleTable(sheet, example, maxWidths, {
-      x: base.x + 2,
-      y: currYIdx,
-    });
-  });
-
-  return currYIdx - base.y + 1;
-}
+  }
+  return baseY - base.y + 1;
+  }
+  
 
 function printLongtext(sheet: any, text: string, base: CoordinateBase): void {
   // sheet.cell(base.y, base.x).value(text.replace(/\n +/g, '\n').trim());

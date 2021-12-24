@@ -1,12 +1,14 @@
 import * as moment from "moment";
 import { version } from "../index";
 import { parse } from "./parser";
+import * as messages from "cucumber-messages" ;
 
 export enum ElementType {
   Rule = "Rule",
   Background = "Background",
   Scenario = "Scenario",
   ScenarioOutline = "Scenario Outline",
+  Example = "Example",
 }
 
 export type Location = {
@@ -31,10 +33,28 @@ export type Step = {
   dataTable: string[][];
 };
 
-export type FeatureElement = {
-  steps: Step[];
+export type ScenarioElement = {
+  elementType: ElementType.Scenario;
+} & BaseFeatureElement;
+
+export type ExampleElement = {
+  elementType: ElementType.Example;
+} & BaseFeatureElement;
+
+export type ScenarioOutlineElement = {
+  elementType: ElementType.ScenarioOutline;
   examples: Example[];
-  elementType: ElementType;
+} & BaseFeatureElement;
+
+export type BackgroundElement = {
+  elementType: ElementType.Background;
+} & BaseFeatureElement;
+
+export type BaseFeatureElement = {
+  steps: Step[];
+} & BaseElement;
+
+type BaseElement = {
   name: string;
   description: string;
   location: Location;
@@ -46,13 +66,22 @@ export type FeatureElement = {
   };
   beforeComments: string[];
   afterComments: string[];
-};
+}
+
+export type FeatureElement = ScenarioElement | ScenarioOutlineElement | BackgroundElement | ExampleElement;
+
+export type RuleElement = {
+  elementType: ElementType.Rule;
+  featureElements: FeatureElement[];
+} & BaseElement;
+
+export type FeatureOrRule = RuleElement | FeatureElement;
 
 export type SubFeature = {
+  featureElements: FeatureOrRule[];
   name: string;
   description: string;
   location: Location;
-  featureElements: FeatureElement[];
   tags: string[];
   result: {
     wasExecuted: boolean;
@@ -155,64 +184,154 @@ export async function generate(files: string[]): Promise<GherkinJSON> {
 
       const comments = chunk.gherkinDocument.comments;
 
+      // var featureOrRules: FeatureOrRule[] = []
+      var featureElements: FeatureElement[] = []
       feature.children.forEach((child: any) => {
-        const element = child.rule
+          let element = child.rule
           ? child.rule
           : child.background
           ? child.background
           : child.scenario;
+        
+          json.summary.scenarios.total += 1;
+          json.summary.scenarios.inconclusive += 1;
 
-        json.summary.scenarios.total += 1;
-        json.summary.scenarios.inconclusive += 1;
+          if (element == child.rule) {
+            element.children.forEach((child: any) => {
+              let element = child.rule
+              ? child.rule
+              : child.background
+              ? child.background
+              : child.scenario;
+    
+              const examples = element.examples
+              ? element.examples.map((example: any) => {
+                  const commentsFound = commentCrawler(
+                    comments,
+                    example.location.line
+                  );
+                  return processExample(example, commentsFound);
+                })
+              : [];
+    
+              const elementType = child.background
+              ? ElementType.Background
+              : child.example
+              ? ElementType.Example
+              : examples.length > 0
+              ? ElementType.ScenarioOutline
+              : ElementType.Scenario;
+    
+              const steps = element.steps
+                ? element.steps.map((step: any) => {
+                    const commentsFound = commentCrawler(
+                      comments,
+                      step.location.line
+                    );
+                    return processStep(step, commentsFound);
+                  })
+                : [];
 
-        const examples = element.examples
-          ? element.examples.map((example: any) => {
-              const commentsFound = commentCrawler(
-                comments,
-                example.location.line
-              );
-              return processExample(example, commentsFound);
-            })
-          : [];
+              const commentsFound = commentCrawler(comments, element.location.line);
 
-        const elementType = child.rule
-          ? ElementType.Rule
-          : child.background
-          ? ElementType.Background
-          : examples.length > 0
-          ? ElementType.ScenarioOutline
-          : ElementType.Scenario;
+              const featureElement: FeatureElement = {
+                elementType: elementType,
+                steps: steps,
+                examples: examples,
+                name: element.name,
+                description: element.description || "",
+                location: element.Location,
+                tags: element.tags ? element.tags.map((tag: any) => tag.name) : [],
+                result: {
+                  wasExecuted: false,
+                  wasSuccessful: false,
+                   wasProvided: false,
+                },
+                beforeComments: commentsFound.before,
+                afterComments: commentsFound.after,
+              }
+              featureElements.splice(featureElements.length, 0, featureElement )
+            });
 
-        const steps = element.steps
-          ? element.steps.map((step: any) => {
-              const commentsFound = commentCrawler(
-                comments,
-                step.location.line
-              );
-              return processStep(step, commentsFound);
-            })
-          : [];
+            const commentsFound = commentCrawler(comments, element.location.line);
 
-        const commentsFound = commentCrawler(comments, element.location.line);
+            let ruleElement: RuleElement = {
+              elementType: ElementType.Rule,
+              featureElements: featureElements,
+              name: element.name,
+              description: element.description || "",
+              location: element.Location,
+              tags: element.tags ? element.tags.map((tag: any) => tag.name) : [],
+              result: {
+                wasExecuted: false,
+                wasSuccessful: false,
+                 wasProvided: false,
+              },
+              beforeComments: commentsFound.before,
+              afterComments: commentsFound.after,
+            }
 
-        tmp.feature.featureElements.push({
-          steps,
-          examples,
-          elementType,
-          name: element.name,
-          description: element.description || "",
-          location: element.location,
-          tags: element.tags ? element.tags.map((tag: any) => tag.name) : [],
-          result: {
-            wasExecuted: false,
-            wasSuccessful: false,
-            wasProvided: false,
-          },
-          beforeComments: commentsFound.before,
-          afterComments: commentsFound.after,
-        });
+            tmp.feature.featureElements.splice(tmp.feature.featureElements.length,0, ruleElement)
+
+            json.summary.scenarios.total += 1;
+            json.summary.scenarios.inconclusive += 1;
+      }
+        else
+        {
+          const examples = element.examples
+            ? element.examples.map((example: any) => {
+                const commentsFound = commentCrawler(
+                  comments,
+                  example.location.line
+                );
+                return processExample(example, commentsFound);
+              })
+            : [];
+  
+          const elementType = child.background
+            ? ElementType.Background
+            : child.example
+            ? ElementType.Example
+            : examples.length > 0
+            ? ElementType.ScenarioOutline
+            : ElementType.Scenario;
+  
+          var steps = element.steps 
+            ? element.steps.map((step: any) => {
+                const commentsFound = commentCrawler(
+                  comments,
+                  step.location.line
+                );
+                return processStep(step, commentsFound);       
+                })
+            : [];
+
+          const commentsFound = commentCrawler(comments, element.location.line);
+
+          const featureElement: FeatureElement = {
+            elementType: elementType,
+            steps: steps,
+            examples: examples,
+            name: element.name,
+            description: element.description || "",
+            location: element.Location,
+            tags: element.tags ? element.tags.map((tag: any) => tag.name) : [],
+            result: {
+              wasExecuted: false,
+              wasSuccessful: false,
+               wasProvided: false,
+            },
+            beforeComments: commentsFound.before,
+            afterComments: commentsFound.after,
+          }
+
+          // featureOrRules.splice(featureOrRules.length, 0, featureElement);
+
+          tmp.feature.featureElements.splice(tmp.feature.featureElements.length,0, featureElement)
+
+        }  
       });
-
+        
       json.features.push(tmp);
       json.summary.features.total += 1;
       json.summary.features.inconclusive += 1;
@@ -281,4 +400,40 @@ function processExample(example: any, comments: any): Example {
     beforeComments: comments.before,
     afterComments: comments.after,
   };
+}
+
+function processElements(element: any, comments: any, child: any, tmp: Feature){
+  
+  const examples = element.examples
+  ? element.examples.map((example: any) => {
+      const commentsFound = commentCrawler(
+        comments,
+        example.location.line
+      );
+      return processExample(example, commentsFound);
+    })
+  : [];
+
+  const elementType = child.rule
+    ? ElementType.Rule
+    : child.background
+    ? ElementType.Background
+    : child.example
+    ? ElementType.Example
+    : examples.length > 0
+    ? ElementType.ScenarioOutline
+    : ElementType.Scenario;
+
+  const steps = element.steps
+    ? element.steps.map((step: any) => {
+        const commentsFound = commentCrawler(
+          comments,
+          step.location.line
+        );
+        return processStep(step, commentsFound);
+      })
+    : [];
+
+  const commentsFound = commentCrawler(comments, element.location.line);
+
 }

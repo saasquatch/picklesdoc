@@ -28,7 +28,7 @@
     "typescript": "^3.9.9"
   },
   "dependencies": {
-    "gherkin": "^8.2.1",
+    "gherkin": "^9.0.0",
     "glob": "^7.1.7",
     "moment": "^2.29.1",
     "xlsx-populate": "^1.21.0",
