@@ -7,6 +7,7 @@ export enum ElementType {
   Rule = "Rule",
   Background = "Background",
   Scenario = "Scenario",
+  Example = "Example",
   ScenarioOutline = "Scenario Outline",
   Example = "Example",
 }
