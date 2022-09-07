@@ -237,21 +237,23 @@ const commentCrawler = (comments: any, startingIndex: any) => {
   };
 
   let element;
-  // prettier-ignore
   // eslint-disable-next-line no-cond-assign
-  while (element = comments.find((c: any) => c.location.line === currentIndex - 1)) {
-      ret.before.push(element.text.trim());
-      currentIndex--;
-    }
+  while (
+    (element = comments.find((c: any) => c.location.line === currentIndex - 1))
+  ) {
+    ret.before.push(element.text.trim());
+    currentIndex--;
+  }
 
   currentIndex = startingIndex;
 
-  // prettier-ignore
   // eslint-disable-next-line no-cond-assign
-  while (element = comments.find((c: any) => c.location.line === currentIndex + 1)) {
-      ret.after.push(element.text.trim());
-      currentIndex++;
-    }
+  while (
+    (element = comments.find((c: any) => c.location.line === currentIndex + 1))
+  ) {
+    ret.after.push(element.text.trim());
+    currentIndex++;
+  }
 
   return ret;
 };
