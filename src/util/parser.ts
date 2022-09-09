@@ -1,4 +1,4 @@
-import * as gherkin from "gherkin";
+import { GherkinStreams } from "@cucumber/gherkin-streams";
 
 /**
  * Parses the feature file and returns the stream
@@ -12,5 +12,5 @@ export function parse(paths: string[]) {
     includePickles: false,
   };
 
-  return gherkin.fromPaths(paths, options);
+  return GherkinStreams.fromPaths(paths, options);
 }
