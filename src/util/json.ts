@@ -98,6 +98,100 @@ export type GherkinJSON = {
   };
 };
 
+function parseChunk(chunk: any, json: GherkinJSON): void {
+  if (!chunk) {
+    throw new Error("Received undefined or null chunk from parser");
+  }
+
+  if (chunk.parseError) {
+    const parseError = chunk.parseError;
+    throw new Error(
+      `Failed to parse chunk "${parseError.source.uri}": ${parseError.message}`
+    );
+  }
+
+  const feature = chunk.gherkinDocument.feature;
+
+  const tmp: Feature = {
+    relativeFolder: chunk.gherkinDocument.uri,
+    feature: {
+      name: feature.name,
+      description: feature.description,
+      location: feature.location,
+      featureElements: [],
+      tags: feature.tags.map((tag: any) => tag.name),
+      result: {
+        wasExecuted: false,
+        wasSuccessful: false,
+        wasProvided: false,
+      },
+    },
+    result: {
+      wasExecuted: false,
+      wasSuccessful: false,
+      wasProvided: false,
+    },
+  };
+
+  const comments = chunk.gherkinDocument.comments;
+
+  feature.children.forEach((child: any) => {
+    const element = child.rule
+      ? child.rule
+      : child.background
+      ? child.background
+      : child.scenario;
+
+    json.summary.scenarios.total += 1;
+    json.summary.scenarios.inconclusive += 1;
+
+    const examples = element.examples
+      ? element.examples.map((example: any) => {
+          const commentsFound = commentCrawler(comments, example.location.line);
+          return processExample(example, commentsFound);
+        })
+      : [];
+
+    const elementType = child.rule
+      ? ElementType.Rule
+      : child.background
+      ? ElementType.Background
+      : examples.length > 0
+      ? ElementType.ScenarioOutline
+      : ElementType.Scenario;
+
+    const steps = element.steps
+      ? element.steps.map((step: any) => {
+          const commentsFound = commentCrawler(comments, step.location.line);
+          return processStep(step, commentsFound);
+        })
+      : [];
+
+    const commentsFound = commentCrawler(comments, element.location.line);
+
+    tmp.feature.featureElements.push({
+      steps,
+      examples,
+      elementType,
+      name: element.name,
+      description: element.description || "",
+      location: element.location,
+      tags: element.tags ? element.tags.map((tag: any) => tag.name) : [],
+      result: {
+        wasExecuted: false,
+        wasSuccessful: false,
+        wasProvided: false,
+      },
+      beforeComments: commentsFound.before,
+      afterComments: commentsFound.after,
+    });
+  });
+
+  json.features.push(tmp);
+  json.summary.features.total += 1;
+  json.summary.features.inconclusive += 1;
+}
+
 export async function generate(files: string[]): Promise<GherkinJSON> {
   return new Promise<any>((resolve, reject) => {
     const stream = parse(files);
@@ -129,93 +223,21 @@ export async function generate(files: string[]): Promise<GherkinJSON> {
       },
     };
 
+    let errors = false;
+
     stream.on("data", (chunk: any) => {
-      const feature = chunk.gherkinDocument.feature;
+      try {
+        parseChunk(chunk, json);
+      } catch (e) {
+        errors = true;
+        if (chunk?.gherkinDocument?.uri) {
+          console.error(`Failed to parse "${chunk?.gherkinDocument?.uri}"`);
+        }
 
-      const tmp: Feature = {
-        relativeFolder: chunk.gherkinDocument.uri,
-        feature: {
-          name: feature.name,
-          description: feature.description,
-          location: feature.location,
-          featureElements: [],
-          tags: feature.tags.map((tag: any) => tag.name),
-          result: {
-            wasExecuted: false,
-            wasSuccessful: false,
-            wasProvided: false,
-          },
-        },
-        result: {
-          wasExecuted: false,
-          wasSuccessful: false,
-          wasProvided: false,
-        },
-      };
-
-      const comments = chunk.gherkinDocument.comments;
-
-      feature.children.forEach((child: any) => {
-        const element = child.rule
-          ? child.rule
-          : child.background
-          ? child.background
-          : child.scenario;
-
-        json.summary.scenarios.total += 1;
-        json.summary.scenarios.inconclusive += 1;
-
-        const examples = element.examples
-          ? element.examples.map((example: any) => {
-              const commentsFound = commentCrawler(
-                comments,
-                example.location.line
-              );
-              return processExample(example, commentsFound);
-            })
-          : [];
-
-        const elementType = child.rule
-          ? ElementType.Rule
-          : child.background
-          ? ElementType.Background
-          : examples.length > 0
-          ? ElementType.ScenarioOutline
-          : ElementType.Scenario;
-
-        const steps = element.steps
-          ? element.steps.map((step: any) => {
-              const commentsFound = commentCrawler(
-                comments,
-                step.location.line
-              );
-              return processStep(step, commentsFound);
-            })
-          : [];
-
-        const commentsFound = commentCrawler(comments, element.location.line);
-
-        tmp.feature.featureElements.push({
-          steps,
-          examples,
-          elementType,
-          name: element.name,
-          description: element.description || "",
-          location: element.location,
-          tags: element.tags ? element.tags.map((tag: any) => tag.name) : [],
-          result: {
-            wasExecuted: false,
-            wasSuccessful: false,
-            wasProvided: false,
-          },
-          beforeComments: commentsFound.before,
-          afterComments: commentsFound.after,
-        });
-      });
-
-      json.features.push(tmp);
-      json.summary.features.total += 1;
-      json.summary.features.inconclusive += 1;
+        if (e instanceof Error) {
+          console.error(e.message);
+        }
+      }
     });
 
     stream.on("error", (err: any) => {
@@ -223,7 +245,11 @@ export async function generate(files: string[]): Promise<GherkinJSON> {
     });
 
     stream.on("finish", () => {
-      resolve(json);
+      if (errors !== false) {
+        reject("Errors encountered during parsing.");
+      } else {
+        resolve(json);
+      }
     });
   });
 }
@@ -237,21 +263,23 @@ const commentCrawler = (comments: any, startingIndex: any) => {
   };
 
   let element;
-  // prettier-ignore
   // eslint-disable-next-line no-cond-assign
-  while (element = comments.find((c: any) => c.location.line === currentIndex - 1)) {
-      ret.before.push(element.text.trim());
-      currentIndex--;
-    }
+  while (
+    (element = comments.find((c: any) => c.location.line === currentIndex - 1))
+  ) {
+    ret.before.push(element.text.trim());
+    currentIndex--;
+  }
 
   currentIndex = startingIndex;
 
-  // prettier-ignore
   // eslint-disable-next-line no-cond-assign
-  while (element = comments.find((c: any) => c.location.line === currentIndex + 1)) {
-      ret.after.push(element.text.trim());
-      currentIndex++;
-    }
+  while (
+    (element = comments.find((c: any) => c.location.line === currentIndex + 1))
+  ) {
+    ret.after.push(element.text.trim());
+    currentIndex++;
+  }
 
   return ret;
 };
