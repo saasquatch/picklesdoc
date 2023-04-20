@@ -1,6 +1,6 @@
 {
   "name": "picklesdoc",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Compile spec documents written in Gherkin language to JSON, XLSX, or LaTeX",
   "main": "dist/index.js",
   "engines": {
@@ -22,7 +22,7 @@
     "type": "git",
     "url": "https://github.com/saasquatch/picklesdoc"
   },
-  "author": "Jayden Chan <jaydencn7@gmail.com>",
+  "author": "ReferralSaaSquatch.com, Inc.",
   "license": "MIT",
   "devDependencies": {
     "@types/glob": "^7.1.3",
